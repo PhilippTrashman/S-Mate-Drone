@@ -464,39 +464,41 @@ def flight(mode):
             tello.send_rc_control(int(a[4]*100), int(a[5]*100), int(a[3]*100), int(a[6]*100))
 
 def flight_xbox():
+    from inputs import get_gamepad
+
     while True:
         img = tello.get_frame_read().frame
         cv2.imshow("LiveStream", img)
         cv2.waitKey(1)
 
-        cont = XboxController()
+        cont = XboxController.read(self)
 
         print(cont)
-        if cont[18] == 1 and cont[17] == 1:
+        if cont[17] == 1 and cont[16] == 1:
             easygui.msgbox("Press 'Ok' to engage throw takeoff",title="Info")
             tello.initiate_throw_takeoff()
             help += 1
-        elif cont[18] == 1 and help == 0:
+        elif cont[17] == 1 and help == 0:
             tello.takeoff()
             help += 1
             print("Takeoff")
-        elif cont[19] == 1 and help != 0:
+        elif cont[17] == 1 and help != 0:
             tello.land()
             break
 
-        elif cont[5] == 1:
+        elif cont[9] == 1:
             tello.flip("b")
         
-        elif cont[6] == 1:
+        elif cont[8] == -1:
             tello.flip("l")
 
-        elif cont[7] == 1:
+        elif cont[9] == -1:
             tello.flip("f")
 
         elif cont[8] == 1:
             tello.flip("r")
         
-        tello.send_rc_control(int(cont[1]*100), int(cont[2]*100), int(cont[19]*100), int(cont[4]*100))
+        tello.send_rc_control(int(cont[0]*100), int(cont[1]*100), int(cont[16]*100), int(cont[3]*100))
       
 
 if __name__ == "__main__":

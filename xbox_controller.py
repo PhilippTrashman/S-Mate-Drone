@@ -28,6 +28,9 @@ class XboxController(object):
         self.RightDPad = 0
         self.UpDPad = 0
         self.DownDPad = 0
+        # Dpad Fix
+        self.DPadY = 0
+        self.DPadX = 0
 
         self._monitor_thread = threading.Thread(target=self._monitor_controller, args=())
         self._monitor_thread.daemon = True
@@ -45,10 +48,9 @@ class XboxController(object):
         b = self.B
         y = self.Y
         # D pad
-        left = self.LeftDPad
-        right = self.RightDPad
-        up = self.UpDPad
-        down = self.DownDPad
+        
+        Dpad_x = self.DPadX
+        Dpad_y = self.DPadY
         # Bumbers
         rb = self.RightBumper
         rt = self.RightTrigger
@@ -60,7 +62,7 @@ class XboxController(object):
 
         # Extra for spacenavigator to controll lift
         extra = self.RightTrigger - self.LeftTrigger
-        return [left_y, left_x, right_y, right_x, a, x, y, b, left, right, up, down, rb, rt, lb, lt, start, select, extra]
+        return [left_y, left_x, right_y, right_x, a, x, y, b, Dpad_x, Dpad_y, rb, rt, lb, lt, start, select, extra]
 
 
     def _monitor_controller(self):
@@ -107,6 +109,11 @@ class XboxController(object):
                     self.UpDPad = event.state
                 elif event.code == 'BTN_TRIGGER_HAPPY4':
                     self.DownDPad = event.state
+                # DPad Fix
+                elif event.code == 'ABS_HAT0X':
+                    self.DPadX = event.state
+                elif event.code == 'ABS_HAT0Y':
+                    self.DPadY = event.state
 
 
 
