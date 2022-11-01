@@ -463,4 +463,4 @@ if __name__ == "__main__":
         tello.send_rc_control(int(a[4]*100), int(a[5]*100), int(a[3]*100), int(a[6]*100))
         
     flight_time = tello.get_flight_time()
-    easygui.msgbox(f"Total flight time was: {flight_time} seconds", title="Info")
+    easygui.msgbox(f"Total flight time was: {flight_time} seconds", title="Info-")
