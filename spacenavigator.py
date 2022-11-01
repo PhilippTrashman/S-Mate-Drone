@@ -6,7 +6,7 @@ import copy
 from pywinusb.hid import usage_pages, helpers, winapi
 from djitellopy import Tello
 import cv2
-from easygui import *
+import easygui
 
 # current version number
 __version__ = "0.2.2"
