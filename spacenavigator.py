@@ -415,11 +415,11 @@ def set_led(state):
 
 
 def flight():
+    tello = Tello()
+    tello.connect()
+    
     while True:
-        tello = Tello()
-        tello.connect()
-        battery = tello.get_battery()
-        battery_temperature = tello.get_temperature()
+
         a = read()
         print(a)
         sleep(0.1)
@@ -438,31 +438,55 @@ def flight():
             tello.flip("r")
         tello.send_rc_control(int(a[4]*100), int(a[5]*100), int(a[3]*100), int(a[6]*100))
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
+    tello = Tello()
+    battery_temperature = tello.get_temperature()
+    battery = tello.get_battery()
 
+    button_list = []
+    button1 = "Video"
+    button2 = "Just flying"
+    button_list.append(button1)
+    button_list.append(button2)
 
-
-
-#     button_list = []
-#     button1 = "Video"
-#     button2 = "Just flying"
-#     button_list.append(button1)
-#     button_list.append(button2)
-
-#     output = easygui.buttonbox(f"The current battery percentage is {battery}%!\nPressing 'Ok' is starting the Live Video Feed", "Info", button_list)
+    output = easygui.buttonbox(f"The current battery percentage is {battery}%!\nPressing 'Ok' is starting the Live Video Feed", "Info", button_list)
     
-#     if output == "Video":
-#         tello.streamon()
-#         tello.set_video_resolution(Tello.RESOLUTION_720P)
-#         tello.set_video_fps(Tello.FPS_30)
+    if output == "Video":
+        tello.streamon()
+        tello.set_video_resolution(Tello.RESOLUTION_720P)
+        tello.set_video_fps(Tello.FPS_30)
     
-#     print("Devices found:\n\t%s" % "\n\t".join(list_devices()))
-#     dev = open(callback=None, button_callback=toggle_led)
-#     help = 0
+    print("Devices found:\n\t%s" % "\n\t".join(list_devices()))
+    dev = open(callback=None, button_callback=toggle_led)
+    help = 0
 
+    while True:
+
+        if output == "Video":
+            img = tello.get_frame_read().frame
+            cv2.imshow("LiveStream", img)
+            cv2.waitKey(1)
+            
+        a = read()
+        print(a)
+        sleep(0.1)
+        if a[7][1] == 1 and a[7][0] == 1:
+            easygui.msgbox("Press 'Ok' to engage throw takeoff",title="Info")
+            tello.initiate_throw_takeoff()
+            help += 1
+        elif a[7][1] == 1 and help == 0:
+            tello.takeoff()
+            help += 1
+            print("Takeoff")
+        elif a[7][1] == 1 and help != 0:
+            tello.land()
+            break
+        elif a[7][0] == 1 and help != 0:
+            tello.flip("r")
+        tello.send_rc_control(int(a[4]*100), int(a[5]*100), int(a[3]*100), int(a[6]*100))
         
-#     flight_time = tello.get_flight_time()
-#     easygui.msgbox(f"Total flight time was: {flight_time} seconds", title="Info-")
+    flight_time = tello.get_flight_time()
+    easygui.msgbox(f"Total flight time was: {flight_time} seconds", title="Info-")
         
-#     flight_time = tello.get_flight_time()
-#     easygui.msgbox(f"Total flight time was: {flight_time} seconds", title="Info-")
+    flight_time = tello.get_flight_time()
+    easygui.msgbox(f"Total flight time was: {flight_time} seconds", title="Info-")

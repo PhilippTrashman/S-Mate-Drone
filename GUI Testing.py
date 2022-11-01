@@ -8,9 +8,11 @@ def cam_on():
     tello.streamon()
     tello.set_video_resolution(Tello.RESOLUTION_720P)
     tello.set_video_fps(Tello.FPS_30)
-    img = tello.get_frame_read().frame
-    cv2.imshow("LiveStream", img)
-    cv2.waitKey(1)
+    while True:
+        img = tello.get_frame_read().frame
+        cv2.imshow("LiveStream", img)
+        cv2.waitKey(1)
+
     flight()
     
 def cam_off():
