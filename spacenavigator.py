@@ -4,7 +4,7 @@ from collections import namedtuple
 import timeit
 import copy
 from pywinusb.hid import usage_pages, helpers, winapi
-from djitellopy import Tello
+from djitellopy import Tellos
 import cv2
 import easygui
 
