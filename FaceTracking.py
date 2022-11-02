@@ -1,6 +1,7 @@
 import cv2
 from djitellopy import Tello
 from time import sleep
+from easygui import *
 
 def resize(image):
     resized = cv2.resize(image, (600, 400), interpolation=cv2.INTER_LINEAR)
@@ -50,6 +51,7 @@ def face_track_fly(tello):
             controlling(detected_faces)
         else:
             tello.send_rc_control(0, 0, 0, 0)
+        sleep(1/30)
         
     
     
@@ -60,9 +62,8 @@ if __name__ == "__main__":
     tello.connect()
     tello.streamon()
     sleep(1)
-
     tello.takeoff()
-    tello.move_up(100)
+    tello.move_up(50)
     
     face_track_fly(tello)
     
