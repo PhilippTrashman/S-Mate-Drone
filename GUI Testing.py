@@ -66,12 +66,12 @@ class App:
         self.window.after(self.delay, self.update)
     
 
-def cam_on():
+def cam_on(window):
     tello = Tello()
     tello.streamon()
     tello.set_video_resolution(Tello.RESOLUTION_720P)
     tello.set_video_fps(Tello.FPS_30)
-    flight("yes")
+    App().__init__(tello, window, "Livestream", tello.streamon())
     
 def xbox():
 
