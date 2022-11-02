@@ -32,7 +32,7 @@ def controlling(faces):
     
         
 
-def face_track(tello):
+def face_track_fly(tello):
     face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
     while True:
@@ -60,8 +60,11 @@ if __name__ == "__main__":
     tello.connect()
     tello.streamon()
     sleep(1)
+
     tello.takeoff()
     tello.move_up(100)
-    face_track(tello)
+    
+    face_track_fly(tello)
+    
     tello.streamoff()
     tello.land()
