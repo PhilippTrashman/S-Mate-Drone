@@ -12,20 +12,21 @@ def gray(image):
 def controlling(faces):
     width_middle = 300
     height_middle = 200
-
-    if faces[0] > width_middle:
-        tello.rotate_clockwise(10)
-    elif faces[0] < width_middle:
-        tello.rotate_counter_clockwise(10)
-    else:
-        tello.send_keepalive()
     
+    if len(faces) != 0:
+        if faces[0] > width_middle:
+            tello.rotate_clockwise(10)
+        elif faces[0] < width_middle:
+            tello.rotate_counter_clockwise(10)
+        else:
+            tello.send_keepalive()
+        
 
 if __name__ == "__main__":
     tello = Tello()
     tello.connect()
     tello.streamon()
-    tello.takeoff()
+    tello.turn_motor_on()
 
     face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
@@ -37,11 +38,10 @@ if __name__ == "__main__":
         print(detected_faces)
         for (x, y, w, h) in detected_faces:
             cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0))
-
+        #controlling(detected_faces)
         cv2.imshow("Detection", frame)
         k = cv2.waitKey(30) & 0xff
         if k == 27:
             break
-    tello.land()
     tello.streamoff()
-    frame.release()
+    tello.turn_motor_off()
