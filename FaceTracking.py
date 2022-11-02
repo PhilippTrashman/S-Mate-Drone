@@ -45,3 +45,4 @@ if __name__ == "__main__":
             break
     tello.streamoff()
     tello.turn_motor_off()
+    print("Hi")
