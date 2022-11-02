@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import messagebox
 from spacenavigator import *
+from inputs import get_gamepad
 
 
 def cam_on():
@@ -11,7 +12,8 @@ def cam_on():
     flight("yes")
     
 def cam_off():
-    flight("no")
+    tello = Tello()
+    flight_xbox()
 
 def btn_e(wind):
     btn_exit = Button(win, text="Exit", width=10, height=2, command=win.quit)
@@ -40,10 +42,10 @@ if __name__ == "__main__":
     btn2.place(x=10, y=70)
     btn_exit.place(x=10, y= 130)
 
-    # Canvas for image placements
-    canvas = Canvas(win, width = 300, height = 300)  
-    canvas.pack()  
-    img = PhotoImage("my_reaction.jpeg")  
-    canvas.create_image(20, 20, anchor=NW, image=img)
+    # # Canvas for image placements
+    # canvas = Canvas(win, width = 300, height = 300)  
+    # canvas.pack()  
+    # img = PhotoImage("my_reaction.jpeg")  
+    # canvas.create_image(20, 20, anchor=NW, image=img)
 
     win.mainloop()
