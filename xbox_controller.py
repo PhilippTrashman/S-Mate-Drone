@@ -3,6 +3,7 @@ import math
 import threading
 from djitellopy import Tello
 import easygui
+# This doesnt work on Mac as no devices can be natively connected
 
 class XboxController(object):
     MAX_TRIG_VAL = math.pow(2, 8)
