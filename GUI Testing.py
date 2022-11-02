@@ -71,7 +71,7 @@ def cam_on(window):
     tello.streamon()
     tello.set_video_resolution(Tello.RESOLUTION_720P)
     tello.set_video_fps(Tello.FPS_30)
-    App().__init__(tello, window, "Livestream", tello.streamon())
+    App(window, "TKinter and OpenCV")
     
 def xbox():
 
@@ -117,6 +117,7 @@ def scale (window):
 
 def video_stream():
     tl = Toplevel()
+
 
 if __name__ == "__main__":
 
