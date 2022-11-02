@@ -1,5 +1,6 @@
 import cv2
 from djitellopy import Tello
+from time import sleep
 
 def resize(image):
     resized = cv2.resize(image, (600, 400), interpolation=cv2.INTER_LINEAR)
@@ -13,36 +14,54 @@ def controlling(faces):
     width_middle = 300
     height_middle = 200
     
-    if len(faces) != 0:
-        if faces[0] > width_middle:
-            tello.rotate_clockwise(10)
-        elif faces[0] < width_middle:
-            tello.rotate_counter_clockwise(10)
-        else:
-            tello.send_keepalive()
+    if (faces[0][0]-width_middle)/4 > 100:
+        controll_yaw = 100
+    elif (faces[0][0]-width_middle)/4 < -100:
+        controll_yaw = -100
+    else:
+        controll_yaw = int((faces[0][0]-width_middle)/4)
+    if (height_middle-faces[0][1])/3 > 100:
+        controll_updown = 100
+    elif (height_middle-faces[0][1])/3 < -100:
+        controll_updown = -100
+    else:
+        controll_updown = int((height_middle-faces[0][1])/3)
+    tello.send_rc_control(0, 0, controll_updown, controll_yaw)
+    
+    
+    
         
 
-if __name__ == "__main__":
-    tello = Tello()
-    tello.connect()
-    tello.streamon()
-    tello.turn_motor_on()
-
+def face_track(tello):
     face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
     while True:
         frame = tello.get_frame_read().frame
         frame = resize(frame)
-        gray_image = gray(frame)
-        detected_faces = face_cascade.detectMultiScale(gray_image, 1.1, 4)
-        print(detected_faces)
-        for (x, y, w, h) in detected_faces:
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0))
-        #controlling(detected_faces)
         cv2.imshow("Detection", frame)
         k = cv2.waitKey(30) & 0xff
         if k == 27:
             break
+        gray_image = gray(frame)
+        detected_faces = face_cascade.detectMultiScale(gray_image, 1.1, 4)
+        #for (x, y, w, h) in detected_faces:
+            #cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0))
+        if len(detected_faces) != 0:
+            controlling(detected_faces)
+        else:
+            tello.send_rc_control(0, 0, 0, 0)
+        
+    
+    
+
+
+if __name__ == "__main__":
+    tello = Tello()
+    tello.connect()
+    tello.streamon()
+    sleep(1)
+    tello.takeoff()
+    tello.move_up(100)
+    face_track(tello)
     tello.streamoff()
-    tello.turn_motor_off()
-    print("Hi")
+    tello.land()
