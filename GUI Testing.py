@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import messagebox
 from spacenavigator import *
-from inputs import get_gamepad
+from xbox_controller import *
 
 
 def cam_on():
