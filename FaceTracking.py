@@ -11,7 +11,7 @@ def gray(image):
     gray_frame = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     return gray_frame
 
-def controlling(faces):
+def controlling(tello, faces, distance):
     width_middle = 300
     height_middle = 200
     
@@ -31,11 +31,19 @@ def controlling(faces):
     else:
         controll_updown = int((height_middle-faces[0][1])/3)
     
-    #front back Abfrage
-    if faces[0][2] > 59:
-        controll_frontback = -25
-    elif faces[0][2] < 50:
-        controll_frontback = 25
+    #Offset Abfrage
+    if distance > 7:
+        offset = 15
+    else:
+        offset = 5
+
+    #Front Back Abfrage
+    if faces[0][2] > (distance*10+offset):
+        controll_frontback = -15
+    elif faces[0][2] < (distance*10+offset) and faces[0][2] > (distance*10):
+        controll_frontback = 0
+    elif faces[0][2] < (distance*10):
+        controll_frontback = 15
     else:
         controll_frontback = 0
 
@@ -46,7 +54,7 @@ def controlling(faces):
     
         
 
-def face_track_fly(tello):
+def face_track_fly(tello, distance):
     face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
     while True:
@@ -58,7 +66,7 @@ def face_track_fly(tello):
         for (x, y, w, h) in detected_faces:
             cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0))
         if len(detected_faces) != 0:
-            controlling(detected_faces)
+            controlling(tello, detected_faces, distance)
         else:
             tello.send_rc_control(0, 0, 0, 0)
         cv2.imshow("Detection", frame)
@@ -67,20 +75,3 @@ def face_track_fly(tello):
             break
         sleep(1/30)
         
-    
-    
-
-#Just for testing
-if __name__ == "__main__":
-    tello = Tello()
-    tello.connect()
-    tello.streamoff()
-    tello.streamon()
-    sleep(1)
-    tello.takeoff()
-    tello.move_up(50)
-    
-    face_track_fly(tello)
-    
-    tello.streamoff()
-    tello.land()
