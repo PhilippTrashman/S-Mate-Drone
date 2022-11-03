@@ -1,5 +1,6 @@
 from djitellopy import Tello
 from FaceTracking import *
+from mediapipe import *
 
 if __name__ == "__main__":
     tello = Tello()
