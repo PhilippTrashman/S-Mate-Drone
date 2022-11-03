@@ -70,7 +70,7 @@ def face_track_fly(tello):
     
     
 
-
+#Just for testing
 if __name__ == "__main__":
     tello = Tello()
     tello.connect()
