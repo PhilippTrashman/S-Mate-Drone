@@ -121,7 +121,6 @@ class XboxController(object):
 def flight_xbox():
 
     tello = Tello()
-    tello.connect()
 
     help = 0
     cont = XboxController()
