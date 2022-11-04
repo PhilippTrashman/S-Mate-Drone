@@ -11,10 +11,13 @@ if __name__ == "__main__":
     tello.streamon()
     sleep(1)
     tello.takeoff()
-    tello.move_up(140)
+    tello.move_up(50)
     
-    #Integer refers to distance(small numbers large distance / big numbers small distance). Rec. between 2 and 9
-    face_track_fly(tello, 9)
+    #Integer refers to distance(small numbers large distance / big numbers small distance). Rec. between 2 and 8
+    face_track_fly(tello, 6)
     
     tello.streamoff()
     tello.land()
+    tello.turn_motor_on()
+    sleep(10)
+    tello.turn_motor_off()
