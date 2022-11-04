@@ -33,7 +33,7 @@ def controlling(tello, faces, distance):
         controll_updown = int((height_middle-faces[0][1])/3)
     
     #Offset Abfrage
-    if distance > 7:
+    if distance >= 7:
         offset = 15
     else:
         offset = 5
@@ -56,7 +56,7 @@ def controlling(tello, faces, distance):
         
 
 def face_track_fly(tello, distance):
-    face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
     while True:
         frame = tello.get_frame_read().frame
@@ -98,6 +98,3 @@ def hand_tracking():
         cv2.imshow("Handtracking", image)
         cv2.waitKey(1)
 
-
-if __name__ == "__main__":
-    hand_tracking()
