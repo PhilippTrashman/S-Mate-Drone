@@ -15,39 +15,29 @@ def gray(image):
 def controlling(tello, faces, distance):
     width_middle = 300
     height_middle = 200
+    face_reference = 80 - distance
     
     #yaw Abfrage
-    if (faces[0][0]-width_middle)/4 > 100:
-        controll_yaw = 100
-    elif (faces[0][0]-width_middle)/4 < -100:
-        controll_yaw = -100
-    else:
-        controll_yaw = int((faces[0][0]-width_middle)/4)
+    controll_yaw = (faces[0][0]/width_middle)*100
+    controll_yaw -= 100
+    controll_yaw = round(controll_yaw)
+    if controll_yaw <= 5 and controll_yaw >= -5:
+        controll_yaw = 0
 
     #Height Abfrage
-    if (height_middle-faces[0][1])/3 > 100:
-        controll_updown = 100
-    elif (height_middle-faces[0][1])/3 < -100:
-        controll_updown = -100
-    else:
-        controll_updown = int((height_middle-faces[0][1])/3)
+    controll_updown = (height_middle/faces[0][1])*100
+    controll_updown -= 100
+    controll_updown = round(controll_updown)
+    if controll_updown >= 50:
+        controll_updown = 50
+    elif controll_updown <= -50:
+        controll_updown = -50
+
+    #front back Abfrage
+    controll_frontback = (face_reference/faces[0][2])*100
+    controll_frontback -= 100
+    controll_frontback = round(controll_frontback)
     
-    #Offset Abfrage
-    if distance >= 7:
-        offset = 15
-    else:
-        offset = 5
-
-    #Front Back Abfrage
-    if faces[0][2] > (distance*10+offset):
-        controll_frontback = -15
-    elif faces[0][2] < (distance*10+offset) and faces[0][2] > (distance*10):
-        controll_frontback = 0
-    elif faces[0][2] < (distance*10):
-        controll_frontback = 15
-    else:
-        controll_frontback = 0
-
     #Zusammenführung der Signale
     tello.send_rc_control(0, controll_frontback, controll_updown, controll_yaw)
     
@@ -75,7 +65,7 @@ def face_track_fly(tello, distance):
         if k == 27:
             break
         sleep(1/30)
-
+    cv2.destroyAllWindows()
 
 def hand_tracking():
     mp_drawing = mp.solutions.drawing_utils
