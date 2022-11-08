@@ -6,10 +6,11 @@ from djitellopy import Tello
 
 def flight(controll_mode: str):#supported controll modes are currently spacemouse and xbox
     cam = False
+    _cam_on()
+    img = tello.get_frame_read().frame
     if controll_mode == "xbox":
 
         cont = XboxController()
-        helper = 1
         while True:
 
             print(cont.read())
@@ -37,16 +38,14 @@ def flight(controll_mode: str):#supported controll modes are currently spacemous
             elif cont.read()[8] == 1:
                 tello.flip("r")
             
-            elif cont.read()[6] == 1 and cam == False:
-                _cam_on()
-                cam = True
-            
-            elif cont.read()[6] == 1 and cam == True:
-                Tello.streamoff
+            elif cont.read()[7] == 1 and cam == True:
                 cam = False
 
+            elif cont.read()[6] == 1 and cam == False:
+                cam = True
+            
+
             if cam == True:
-                img = tello.get_frame_read().frame
                 cv2.imshow("LiveStream", img)
                 cv2.waitKey(1)
 

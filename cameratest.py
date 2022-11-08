@@ -1,68 +1,44 @@
-from PIL import Image, ImageTk
-import tkinter as tk
-import argparse
-import datetime
+from tkinter import *
 import cv2
-import os
+from PIL import Image, ImageTk
+from time import sleep
+import mediapipe as mp
 
-class Application:
-    def __init__(self, videosource, output_path = "./"):
-        """ Initialize application which uses OpenCV + Tkinter. It displays
-            a video stream in a Tkinter window and stores current snapshot on disk """
-        self.vs = videosource # capture video frames, 0 is your default video camera
-        self.output_path = output_path  # store output path
-        self.current_image = None  # current image from the camera
+width, height = 800, 600
+cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 
-        self.root = tk.Tk()  # initialize root window
-        self.root.title("PyImageSearch PhotoBooth")  # set window title
-        # self.destructor function gets fired when the window is closed
-        self.root.protocol('WM_DELETE_WINDOW', self.destructor)
+root = Tk()
+root.title("S.Mate Drone")
+root.bind('<Escape>', lambda e: root.quit())
+lmain = Label(root)
 
-        self.panel = tk.Label(self.root)  # initialize image panel
-        self.panel.pack(padx=10, pady=10)
+btn2 = Button(root, text = "Xbox", width=10, height=2)
+btn_con = Button(root, text="connect", width=10, height=2)
+btn_exit = Button(root, text="Exit", width=10, height=2, background= "red")
+btn_con.grid(column=0, row=1)
+btn2.grid(column=0, row=0)
+lmain.grid(column=1, row=0)
 
-        # create a button, that when pressed, will take the current frame and save it to file
-        btn = tk.Button(self.root, text="Snapshot!", command=self.take_snapshot)
-        btn.pack(fill="both", expand=True, padx=10, pady=10)
+def hand_track():
+    mp_drawing = mp.solutions.drawing_utils
+    mp_drawing_styles = mp.solutions.drawing_styles
+    mphands = mp.solutions.hands
+    hands = mphands.Hands()
 
-        # start a self.video_loop that constantly pools the video sensor
-        # for the most recently read frame
-        self.video_loop()
+    data,image=cap.read()
+    image = cv2.cvtColor(cv2.flip(image,1),cv2.COLOR_BGR2RGB)
+    result = hands.process(image)
+    
+    if result.multi_hand_landmarks:
+        for hand_landmarks in result.multi_hand_landmarks:
+            mp_drawing.draw_landmarks(image, hand_landmarks, mphands.HAND_CONNECTIONS)
+    img = Image.fromarray(image)
+    imgtk = ImageTk.PhotoImage(image=img)
+    lmain.imgtk = imgtk
+    lmain.configure(image=imgtk)
+    lmain.after(10, hand_track)
 
-    def video_loop(self):
-        """ Get frame from the video stream and show it in Tkinter """
-        ok, frame = self.vs.read()  # read frame from video stream
-        if ok:  # frame captured without any errors
-            cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)  # convert colors from BGR to RGBA
-            self.current_image = Image.fromarray(cv2image)  # convert image for PIL
-            imgtk = ImageTk.PhotoImage(image=self.current_image)  # convert image for tkinter
-            self.panel.imgtk = imgtk  # anchor imgtk so it does not be deleted by garbage-collector
-            self.panel.config(image=imgtk)  # show the image
-        self.root.after(30, self.video_loop)  # call the same function after 30 milliseconds
-
-    def take_snapshot(self):
-        """ Take snapshot and save it to the file """
-        ts = datetime.datetime.now() # grab the current timestamp
-        filename = "{}.jpg".format(ts.strftime("%Y-%m-%d_%H-%M-%S"))  # construct filename
-        p = os.path.join(self.output_path, filename)  # construct output path
-        self.current_image.save(p, "JPEG")  # save image as jpeg file
-        print("[INFO] saved {}".format(filename))
-
-    def destructor(self):
-        """ Destroy the root object and release all resources """
-        print("[INFO] closing...")
-        self.root.destroy()
-        self.vs.release()  # release web camera
-        cv2.destroyAllWindows()  # it is not mandatory in this application
-
-def stream():    
-    # construct the argument parse and parse the arguments
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-o", "--output", default="./",
-        help="path to output directory to store snapshots (default: current folder")
-    args = vars(ap.parse_args())
-
-    # start the app
-    print("[INFO] starting...")
-    pba = Application(args["output"])
-    pba.root.mainloop()
+hand_track()
+root.mainloop()

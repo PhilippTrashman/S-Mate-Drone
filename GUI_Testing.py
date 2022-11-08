@@ -2,9 +2,9 @@ from tkinter import *
 from tkinter import messagebox
 from spacenavigator import *
 from xbox_controller import *
-import PIL.Image, PIL.ImageTk
-import time  
-from tello_control_ui import *
+from PIL import Image, ImageTk
+from GestureandFaceTracking import * 
+import mediapipe as mp
 
 def connect():
     tello = Tello()
@@ -66,7 +66,7 @@ def menus(window):
     file_menu.add_separator() 
     file_menu.add_command(label='Settings', command=controll_selection) 
     file_menu.add_separator() 
-    file_menu.add_command(label='Exit', command=win.quit) 
+    file_menu.add_command(label='Exit', command=window.quit) 
     help_menu = Menu(mn) 
     mn.add_cascade(label='Help', menu=help_menu) 
     help_menu.add_command(label='Feedback') 
@@ -82,33 +82,42 @@ def throttle(val):
     tello.set_speed(val)
     print(val)
 
+def hand_track():
+    mp_drawing = mp.solutions.drawing_utils
+    mp_drawing_styles = mp.solutions.drawing_styles
+    mphands = mp.solutions.hands
+    hands = mphands.Hands()
+    data,image=cap.read()
+    image = cv2.cvtColor(cv2.flip(image,1),cv2.COLOR_BGR2RGB)
+    result = hands.process(image)
+
+    if result.multi_hand_landmarks:
+        for hand_landmarks in result.multi_hand_landmarks:
+            mp_drawing.draw_landmarks(image, hand_landmarks, mphands.HAND_CONNECTIONS)
+    img = Image.fromarray(image)
+    imgtk = ImageTk.PhotoImage(image=img)
+    lmain.imgtk = imgtk
+    lmain.configure(image=imgtk)
+    lmain.after(10, hand_track)
+
 if __name__ == "__main__":
-    window =  TelloUI
-    win = Tk()
-    # Name
-    win.title("S-Mate Drone :)")
-    # Window size
-    win.geometry('1080x720')
-    # Icon
-    pic = PhotoImage(file= "icon.png")
-    win.iconphoto(False, pic)
+    width, height = 800, 600
+    cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 
-    # Button Options an their placements on the windows
-    # btn=Button(win,text="Camera on", width=10,height=2,command=cam_on)
-    btn2 = Button(win, text = "Xbox", width=10, height=2, command=xbox)
-    btn_con = Button(win, text="connect", width=10, height=2, command=connect())
-    btn_exit = Button(win, text="Exit", width=10, height=2, command=win.quit, background= "red")
+    root = Tk()
+    root.title("S.Mate Drone")
+    root.bind('<Escape>', lambda e: root.quit())
+    lmain = Label(root)
 
-    menus(win)
-    sca = Scale(win, from_=100, to=10, sliderlength= 50, length= 250, width= 25, command = throttle)
+    btn2 = Button(root, text = "Xbox", width=10, height=2)
+    btn_con = Button(root, text="connect", width=10, height=2)
+    btn_exit = Button(root, text="Exit", width=10, height=2, background= "red")
+    btn_con.pack(side='top', anchor=NW)
+    btn2.pack(side='top', anchor=NW)
+    lmain.pack(side='left', anchor=CENTER)
+    
 
-
-    # btn.place(x=10,y=20)
-    btn_con.pack(side= 'top', anchor=W, pady= 2, padx= 4)
-    btn2.pack(side= 'top', anchor=W, pady= 2, padx= 4)
-    btn_exit.pack(side='bottom',anchor=E, pady= 2, padx= 4)
-    sca.pack(side='top',anchor=E, fill=Y)
-
-
-
-    win.mainloop()
+    hand_track()
+    root.mainloop()
