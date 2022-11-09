@@ -45,20 +45,26 @@ class HandDetection():
     def tellocontroll(self, tello):
         liste = self.lmlist
         if len(liste) != 0:
-            print(liste[4])
-            print(liste[20])
+            
             if (liste[4][1]-liste[20][1]) > 300 or (liste[4][1]-liste[20][1]) < -300:
+                
                 if liste[4][1] < liste[20][1] and (liste[17][2]-liste[20][2]) < 100:
                     tello.send_rc_control(-50, 0, 0, 0)
+                
                 elif liste[4][1] > liste[20][1] and (liste[17][2]-liste[20][2]) < 100:
                     tello.send_rc_control(50, 0, 0, 0)
+            
             elif (liste[4][1]-liste[20][1]) < 300 or (liste[4][1]-liste[20][1]) > -300:
+                
                 if liste[4][2] < liste[20][2] and (liste[17][1]-liste[20][1]) < 100:
                     tello.send_rc_control(0, 0, 50, 0)
+                
                 elif liste[4][2] > liste[20][2] and (liste[17][1]-liste[20][1]) < 100:
                     tello.send_rc_control(0, 0, -50, 0)
+            
             else:
                 tello.send_rc_control(0, 0, 0, 0)
+        
         else:
             tello.send_rc_control(0, 0, 0, 0)
 
