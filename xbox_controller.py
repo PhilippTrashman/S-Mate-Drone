@@ -119,36 +119,38 @@ class XboxController(object):
                 elif event.code == 'ABS_HAT0Y':
                     self.DPadY = event.state
 
-def flight_xbox(tello, cont, help):
+    def flight_xbox(self, tello, help):
+        cont = self
 
-
-    print(cont.read())
-    if cont.read()[15] == 1:
-        easygui.msgbox("Press 'Ok' to engage throw takeoff",title="Info")
-        tello.initiate_throw_takeoff()
-        help = 1
-    elif cont.read()[14] == 1 and help == 0:
-        tello.takeoff()
-        help = 1
-        print("Takeoff")
-    elif cont.read()[14] == 1 and help != 0:
-        tello.land()
-    elif cont.read()[9] == 1:
-        tello.flip("b")
-    elif cont.read()[8] == -1:
-        tello.flip("l")
-    elif cont.read()[9] == -1:
-        tello.flip("f")
-    elif cont.read()[8] == 1:
-        tello.flip("r")
-    tello.send_rc_control(int(cont.read()[0]*100), int(cont.read()[1]*100), int(cont.read()[16]*100), int(cont.read()[3]*100))
+        print(cont.read())
+        if cont.read()[15] == 1:
+            easygui.msgbox("Press 'Ok' to engage throw takeoff",title="Info")
+            tello.initiate_throw_takeoff()
+            help = 1
+        elif cont.read()[14] == 1 and help == 0:
+            tello.takeoff()
+            help = 1
+            print("Takeoff")
+        elif cont.read()[14] == 1 and help != 0:
+            tello.land()
+        elif cont.read()[9] == 1:
+            tello.flip("b")
+        elif cont.read()[8] == -1:
+            tello.flip("l")
+        elif cont.read()[9] == -1:
+            tello.flip("f")
+        elif cont.read()[8] == 1:
+            tello.flip("r")
+        tello.send_rc_control(int(cont.read()[0]*100), int(cont.read()[1]*100), int(cont.read()[16]*100), int(cont.read()[3]*100))
 
 def controller_test(object):
 
     print(object.read())
 
 if __name__ == '__main__':
+
     joy = XboxController()
     while True:
-        print(joy.read())
+
+            print(joy.read())
         

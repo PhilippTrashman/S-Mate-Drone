@@ -22,9 +22,9 @@ btn2.grid(column=0, row=0)
 lmain.grid(column=1, row=0)
 
 def hand_track():
-    mp_drawing = mp.solutions.drawing_utils
-    mp_drawing_styles = mp.solutions.drawing_styles
-    mphands = mp.solutions.hands
+    mp_drawing = mp.solutions.drawing_utils   # type: ignore
+    mp_drawing_styles = mp.solutions.drawing_styles   # type: ignore
+    mphands = mp.solutions.hands   # type: ignore
     hands = mphands.Hands()
 
     data,image=cap.read()
@@ -34,9 +34,9 @@ def hand_track():
     if result.multi_hand_landmarks:
         for hand_landmarks in result.multi_hand_landmarks:
             mp_drawing.draw_landmarks(image, hand_landmarks, mphands.HAND_CONNECTIONS)
-    img = Image.fromarray(image)
+    img = Image.fromarray(image)   # type: ignore
     imgtk = ImageTk.PhotoImage(image=img)
-    lmain.imgtk = imgtk
+    lmain.imgtk = imgtk   # type: ignore
     lmain.configure(image=imgtk)
     lmain.after(10, hand_track)
 
