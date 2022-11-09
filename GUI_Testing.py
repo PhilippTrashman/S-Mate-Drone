@@ -1,10 +1,10 @@
 from tkinter import *
+from tkinter import messagebox
 from spacenavigator import *
 from xbox_controller import *
 from PIL import Image, ImageTk
 from GestureandFaceTracking import * 
 import mediapipe as mp
-
 
 def controll_selection():
     root = Tk()
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
     print('Cap initialized!')
     tello = Tello()
-    tello.connect()
+    # tello.connect()
 
     print('Init UI...')
     root = Tk()
@@ -95,47 +95,51 @@ if __name__ == "__main__":
     v = StringVar(root, "0")
 
     cont_types = {"Xbox" : "1", "Spacemouse" : "2"}
-    xbox_btn = Radiobutton(root, text = "Xbox", variable = v, value = "1",indicator = 0, background = "light blue")
-    space_btn = Radiobutton(root, text= "Space Mouse", variable= v, value= "2",indicator = 0, background= "light blue")
+    xbox_btn = Radiobutton(root, text = "Xbox", variable = v, value = "1", indicator = 0, background = "#D6E0EF", height=1, width= 15)
+    space_btn = Radiobutton(root, text= "Space Mouse", variable= v, value= "2", indicator = 0, background = "#D6E0EF", height=1, width= 15)
+    face_btn = Radiobutton(root, text= "Face Tracking", variable= v, value= "3", indicator = 0, background = "#D6E0EF", height=1, width= 15)
+    gest_btn = Radiobutton(root, text= "Gesture Tracking", variable= v, value= "4", indicator = 0, background = "#D6E0EF", height=1, width= 15)
 
-    btn2 = Button(root, text = "Xbox", width=10, height=2,)
-    btn_con = Button(root, text="connect", width=10, height=2)
-    btn_exit = Button(root, text="Exit", width=10, height=2, background= "red")
-    xbox_btn.pack(side='top', anchor=W)
-    space_btn.pack(side='top', anchor=W)
-    lmain.pack(side='left', anchor=CENTER)    
+    btn2 = Button(root, text = "Xbox", width=10, height=2, background="#D6E0EF")
+    btn_con = Button(root, text="connect", width=10, height=2, background= '#D6E0EF')
+    btn_exit = Button(root, text="Exit", width=10, height=2, background= "#58181F")
+    xbox_btn.pack(side='bottom', anchor=W)
+    space_btn.pack(side='bottom', anchor=W)
+    face_btn.pack(side='bottom')
+    gest_btn.pack(side='bottom')
+
+    btn_con.pack(side='left', anchor=N)
+    btn_exit.pack(side='right', anchor=S)
+    lmain.pack(anchor=CENTER)
+
     joy = XboxController()
     # hand_track()
     help = 0
     cont = XboxController()
     xbox_flag = False
+    space_flag = False
     while True:
         root.update()
         controller = v.get()
 
         if controller == "1":
-            print(cont.read())
-            
-            if cont.read()[15] == 1:
-                easygui.msgbox("Press 'Ok' to engage throw takeoff",title="Info")
-                tello.initiate_throw_takeoff()
-                help = 1
-            elif cont.read()[14] == 1 and help == 0:
-                tello.takeoff()
-                help = 1
-                print("Takeoff")
-            elif cont.read()[14] == 1 and help != 0:
-                tello.land()
-            elif cont.read()[9] == 1 and help == 1:
-                tello.flip("b")
-            elif cont.read()[8] == -1 and help == 1:
-                tello.flip("l")
-            elif cont.read()[9] == -1 and help == 1:
-                tello.flip("f")
-            elif cont.read()[8] == 1 and help == 1:
-                tello.flip("r")
-            if help == 1:
-                tello.send_rc_control(int(cont.read()[0]*100), int(cont.read()[1]*100), int(cont.read()[16]*100), int(cont.read()[3]*100))
+            flight_xbox(tello, cont, help)
+
+        elif controller == "2":
+            if space_flag == False:
+                dev = open(callback=None, button_callback=toggle_led)
+                space_flag = True
+
+            elif space_flag == True:
+                flight(tello, help)
+
+        elif controller == "3":
+            print("Face tracking")
+        
+        elif controller == "4":
+            print("Gesture tracking")
+        
+        sleep(0.001)
 
 
 
