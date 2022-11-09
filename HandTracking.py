@@ -29,6 +29,9 @@ class HandDetection():
                     self.mpDraw.draw_landmarks(image, hand_landmarks, self.mpHands.HAND_CONNECTIONS)
         return image
 
+
+
+
     def positions(self, img, handNo=0, draw=True):
         self.lmlist = []
         if self.results.multi_hand_landmarks:
@@ -36,37 +39,40 @@ class HandDetection():
             for id, lm in enumerate(myhand.landmark):
                 h, w, c = img.shape
                 cx, cy = int(lm.x * w), int(lm.y * h)
-                #print(id, cx, cy)
                 self.lmlist.append([id, cx, cy])
                 if draw:
                     cv2.circle(img, (cx, cy), 15, (255, 0, 255), cv2.FILLED)
         return self.lmlist
 
-    def tellocontroll(self, tello):
+
+
+
+    def tellocontroll(self, tello, speed):
         liste = self.lmlist
         if len(liste) != 0:
-            
-            if (liste[4][1]-liste[20][1]) > 300 or (liste[4][1]-liste[20][1]) < -300:
+            if (liste[8][2]-liste[5][2]) < 150 and (liste[8][2]-liste[5][2]) > -150:
+                if (liste[4][1]-liste[20][1]) > 300 or (liste[4][1]-liste[20][1]) < -300:
+                    
+                    if liste[4][1] < liste[20][1] and (liste[17][2]-liste[20][2]) < 100:
+                        tello.send_rc_control(-speed, 0, 0, 0)
+                    
+                    elif liste[4][1] > liste[20][1] and (liste[17][2]-liste[20][2]) < 100:
+                        tello.send_rc_control(speed, 0, 0, 0)
                 
-                if liste[4][1] < liste[20][1] and (liste[17][2]-liste[20][2]) < 100:
-                    tello.send_rc_control(-50, 0, 0, 0)
-                
-                elif liste[4][1] > liste[20][1] and (liste[17][2]-liste[20][2]) < 100:
-                    tello.send_rc_control(50, 0, 0, 0)
-            
-            elif (liste[4][1]-liste[20][1]) < 300 or (liste[4][1]-liste[20][1]) > -300:
-                
-                if liste[4][2] < liste[20][2] and (liste[17][1]-liste[20][1]) < 100:
-                    tello.send_rc_control(0, 0, 50, 0)
-                
-                elif liste[4][2] > liste[20][2] and (liste[17][1]-liste[20][1]) < 100:
-                    tello.send_rc_control(0, 0, -50, 0)
-            
+                elif (liste[4][1]-liste[20][1]) < 300 or (liste[4][1]-liste[20][1]) > -300:
+                    
+                    if liste[4][2] < liste[20][2] and (liste[17][1]-liste[20][1]) < 100:
+                        tello.send_rc_control(0, 0, speed, 0)
+                    
+                    elif liste[4][2] > liste[20][2] and (liste[17][1]-liste[20][1]) < 100:
+                        tello.send_rc_control(0, 0, -speed, 0)
             else:
                 tello.send_rc_control(0, 0, 0, 0)
-        
         else:
             tello.send_rc_control(0, 0, 0, 0)
+
+
+
 
 
 def main():
@@ -76,8 +82,7 @@ def main():
     tello.streamon()
     cap = cv2.VideoCapture(0)
     handtrack = HandDetection()
-
-    tello.takeoff()
+    help = 0
     while True:
         success, img = cap.read()
         img = cv2.cvtColor(cv2.flip(img,1),cv2.COLOR_BGR2RGB)
@@ -86,8 +91,10 @@ def main():
         #if len(lmlist) != 0:
             #print(lmlist[8])
             #print(lmlist[12])
-        
-        handtrack.tellocontroll(tello)
+        if help == 0:
+            tello.takeoff()
+            help += 1
+        handtrack.tellocontroll(tello, 100) #Integer refers to speed (0-100)
 
         cv2.imshow("Hand Tracking", img)
         k = cv2.waitKey(30) & 0xff
