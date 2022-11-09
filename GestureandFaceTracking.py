@@ -63,9 +63,12 @@ def face_track_fly(tello, distance):
         cv2.imshow("Detection", frame)
         k = cv2.waitKey(30) & 0xff
         if k == 27:
-            break
+            tello.streamoff()
+            cv2.destroyAllWindows()
+            cv2.waitKey(1)
+            return
         sleep(1/30)
-    cv2.destroyAllWindows()
+    
 
 def hand_tracking():
     mp_drawing = mp.solutions.drawing_utils
@@ -84,7 +87,13 @@ def hand_tracking():
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         if results.multi_hand_landmarks:
             for hand_landmarks in results.multi_hand_landmarks:
+                for id, lm in enumerate(hand_landmarks.landmark):
+                    h, w, c = image.shape
+                    cx, cy = int(lm.x*w), int(lm.y*h)
+                    print(id, cx, cy)
                 mp_drawing.draw_landmarks(image, hand_landmarks, mphands.HAND_CONNECTIONS)
+                    
+
         cv2.imshow("Handtracking", image)
         cv2.waitKey(1)
 
