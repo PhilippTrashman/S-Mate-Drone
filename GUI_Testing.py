@@ -3,16 +3,31 @@ from time import sleep
 from main import *
 
 if __name__ == "__main__":
+
+    # defining class objects
     start = GUI_mate()
+    joy = XboxController()
+    space = Space_call()
+    hand = HandDetection()
+    face = FaceTracking()
     tello = Tello()
     root = Tk()
+
+    # Creating the camera Labels for the Drone
     lmain = Label(root)
     ldrone = Label(root)
 
+    # Starting the Window
     start.init(root, False)
 
+    # Testing case to enable and disable the cameras
     cam_state = False
+    hand_track_flag = True
+
     drone_state = True
+    d_cam_state = True
+
+    # setting the width and height for the Webcam
     width, height = 800, 600
 
     if cam_state == True:
@@ -21,17 +36,21 @@ if __name__ == "__main__":
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
         print('Cap initialized!')
-        start.hand_track(lmain, cap)
+
+        if hand_track_flag == True:
+            start.hand_track(lmain, cap)
 
     if drone_state == True:
-        print("turning the drone stream on...")
-        tello.streamoff()
-        tello.streamon()
-        print("Stream turned on")
+        tello.connect()
+        
+        if d_cam_state == True:
 
-        print("reading drone Frames...")
-        drone_cam = tello.get_frame_read().frame
-        print("frames read")
+            print("turning the drone stream on...")
+            tello.streamoff()
+            tello.streamon()
+            print("Stream turned on")
+
+            face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
     cont_var = StringVar(root, "0")
     throt_var = IntVar(root, 100)
@@ -39,13 +58,10 @@ if __name__ == "__main__":
     start.buttons(cont_var,throt_var, lmain, ldrone,  root)
 
 
-    joy = XboxController()
-    space = Space_call()
-    hand = HandDetection()
     help = 0
     xbox_flag = False
     space_flag = False
-    flight_flag = False
+    flight_flag = True
 
     while True:
         if root.state() != 'normal':    # Forcefully closes everything, calles Attribute and Traceback Errors
@@ -69,8 +85,21 @@ if __name__ == "__main__":
                 space.flight(tello, help)
 
         elif controller == "3":         # used to controll the drone via face tracking
-            print("Face tracking")
-        
+            if drone_state == False:
+                tello.connect()
+                print("turning the drone stream on...")
+                tello.streamoff()
+                tello.streamon()
+                print("Stream turned on")
+                print("reading drone Frames...")
+                drone_cam = tello.get_frame_read().frame
+                print("frames read")                
+                face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+                drone_state = True
+            
+            else:
+                face.tk_facetrack(tello, 20, face_cascade, ldrone)  #type: ignore
+
         elif controller == "4":
             if drone_state == False:
                 print("turning the drone stream on...")
@@ -78,18 +107,16 @@ if __name__ == "__main__":
                 tello.streamon()
                 print("Stream turned on")
 
-                print("reading drone Frames...")
-                drone_cam = tello.get_frame_read().frame
-                print("frames read")
                 drone_state = True
-            else:
-                
+            else:               
+                drone_cam = tello.get_frame_read().frame
+
                 if flight_flag == False:
                     tello.takeoff()
                     flight_flag = True
 
                 else:
-                    start.drone_stream(ldrone, drone_cam, tello)
+                    start.drone_stream(ldrone, drone_cam, tello)    #type: ignore
 
         
         root.update()

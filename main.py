@@ -231,9 +231,9 @@ class GUI_mate():
         """simple drone video Feed"""
         frame = tello.get_frame_read().frame
         img = Image.fromarray(frame)    #type: ignore
-        imgtk = ImageTk.Photoimage(image=img)
+        imgtk = ImageTk.PhotoImage(image=img)
         label.imgtk = imgtk # type: ignore
-        label.configure(frame = imgtk)
+
 
     def buttons(self, v: StringVar,throt: IntVar, web_label: Label, dro_label: Label , window: Tk):
         """Buttons used by the main Window, v is a variable used to controll the actions taken by the menu, label is for the Hand Tracking Camera and window is the... well window"""
@@ -281,7 +281,7 @@ class GUI_mate():
         speed_sca.pack(side='bottom', anchor=CENTER, in_= low_scale_frame)
 
         lmain.pack(side = 'left', anchor=W)
-        web_label.pack(side = 'left', anchor= W)
+        dro_label.pack(side = 'right', anchor= E)
         print("buttons created")
 
 class HandDetection():
@@ -434,4 +434,21 @@ class FaceTracking():
             if k == 27:
                 break
             sleep(1/30)
+    
+    def tk_facetrack(self, tello: Tello, distance: int, cascade, label: Label):
+        frame = tello.get_frame_read().frame
+        frame = self.resize(frame)
+        gray_image = self.gray(frame)
+        detected_faces = cascade.detectMultiScale(gray_image, 1.1, 4)
+        print(detected_faces)
+        for (x, y, w, h) in detected_faces:
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0))
+        if len(detected_faces) != 0:
+            self.controlling(tello, detected_faces, distance)
+        else:
+            tello.send_rc_control(0, 0, 0, 0)
+        
+        img = Image.fromarray(frame)    #type: ignore
+        imgtk = ImageTk.PhotoImage(image=img)
+        label.imgtk = imgtk     #type: ignore
 
