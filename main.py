@@ -160,7 +160,6 @@ class GUI_mate():
         """Is the Starting point for the UI, calling if the DJI Drone is enabled, later optional Activation should be implemented"""
         print('Started!')
 
-        tello = Tello()
         print('Init UI...')
         root = window
         root.title("S.Mate Drone")
@@ -168,11 +167,6 @@ class GUI_mate():
 
         print('UI initialized!')
 
-        if drone_state == True:
-            tello.connect()
-        
-        else:
-            print("Tello disabled")
 
     def init_camera(self, label: Label, cam_state: bool):    # Does not work when called as a function initself
         """NOT WORKING, DONT USE!"""
@@ -185,30 +179,6 @@ class GUI_mate():
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
             print('Cap initialized!')
             self.hand_track(lmain, cap)
-
-    def TK_face_track(self, label: Label, cam_state: bool, tello : Tello, face_object, face_cascade, distance: int):
-        """Initiliazises the Camera Stream, Distance should be regulated by a scale from 0 to 60 preferably in increments of 10"""
-        if cam_state == True:
-            facetracking = face_object
-            frame = tello.get_frame_read().frame
-            frame = facetracking.resize(frame)
-            
-            gray_image = facetracking.gray(frame)
-            detected_faces = face_cascade.detectMultiScale(gray_image, 1.1, 4)
-            for (x, y, w, h) in detected_faces:
-                cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0))
-            if len(detected_faces) != 0:
-                facetracking.controlling(tello, detected_faces, distance)
-            else:
-                tello.send_rc_control(0, 0, 0, 0)
-            cv2.imshow("Detection", frame)
-            k = cv2.waitKey(30) & 0xff
-            img = Image.fromarray(frame)   # type: ignore
-            imgtk = ImageTk.PhotoImage(image=img)
-            label.imgtk = imgtk # type: ignore
-            label.configure(image=imgtk)
-
-
 
     def menus(self, window:Tk):    #Currently deprecated and not used in current build
         mn = Menu(window) 
@@ -257,6 +227,14 @@ class GUI_mate():
         lmain.imgtk = imgtk # type: ignore
         lmain.configure(image=imgtk)
     
+    def drone_stream(self, label: Label, capture, tello : Tello):
+        """simple drone video Feed"""
+        frame = tello.get_frame_read().frame
+        img = Image.fromarray(frame)    #type: ignore
+        imgtk = ImageTk.Photoimage(image=img)
+        label.imgtk = imgtk # type: ignore
+        label.configure(frame = imgtk)
+
     def buttons(self, v: StringVar,throt: IntVar, web_label: Label, dro_label: Label , window: Tk):
         """Buttons used by the main Window, v is a variable used to controll the actions taken by the menu, label is for the Hand Tracking Camera and window is the... well window"""
 
