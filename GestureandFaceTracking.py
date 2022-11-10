@@ -40,6 +40,10 @@ def controlling(tello, faces, distance):
     
     #Zusammenführung der Signale
     tello.send_rc_control(0, controll_frontback, controll_updown, controll_yaw)
+    
+    
+    
+        
 
 def face_track_fly(tello, distance):
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -64,6 +68,7 @@ def face_track_fly(tello, distance):
             cv2.waitKey(1)
             return
         sleep(1/30)
+    
 
 def hand_tracking():
     mp_drawing = mp.solutions.drawing_utils
@@ -91,3 +96,4 @@ def hand_tracking():
 
         cv2.imshow("Handtracking", image)
         cv2.waitKey(1)
+

@@ -9,9 +9,10 @@ if __name__ == "__main__":
     lmain = Label(root)
     ldrone = Label(root)
 
-    start.init(root, True)
+    start.init(root, False)
 
     cam_state = False
+    drone_state = True
     width, height = 800, 600
 
     if cam_state == True:
@@ -22,13 +23,21 @@ if __name__ == "__main__":
         print('Cap initialized!')
         start.hand_track(lmain, cap)
 
+    if drone_state == True:
+        print("turning the drone stream on...")
+        tello.streamoff()
+        tello.streamon()
+        print("Stream turned on")
+
+        print("reading drone Frames...")
+        drone_cam = tello.get_frame_read().frame
+        print("frames read")
 
     cont_var = StringVar(root, "0")
     throt_var = IntVar(root, 100)
 
     start.buttons(cont_var,throt_var, lmain, ldrone,  root)
-    tello.streamon()
-    drone_cam = tello.get_frame_read().frame
+
 
     joy = XboxController()
     space = Space_call()
@@ -37,6 +46,7 @@ if __name__ == "__main__":
     xbox_flag = False
     space_flag = False
     flight_flag = False
+
     while True:
         if root.state() != 'normal':    # Forcefully closes everything, calles Attribute and Traceback Errors
             root.destroy()
@@ -62,12 +72,25 @@ if __name__ == "__main__":
             print("Face tracking")
         
         elif controller == "4":
-            if flight_flag == False:
-                tello.takeoff()
-                flight_flag = True
-            
+            if drone_state == False:
+                print("turning the drone stream on...")
+                tello.streamoff()
+                tello.streamon()
+                print("Stream turned on")
+
+                print("reading drone Frames...")
+                drone_cam = tello.get_frame_read().frame
+                print("frames read")
+                drone_state = True
             else:
-                hand.Tk_handflight(tello, drone_cam, ldrone)
+                
+                if flight_flag == False:
+                    tello.takeoff()
+                    flight_flag = True
+
+                else:
+                    start.drone_stream(ldrone, drone_cam, tello)
+
         
         root.update()
         sleep(0.001)
