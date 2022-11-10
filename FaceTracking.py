@@ -49,10 +49,7 @@ def controlling(tello, faces, distance):
 
     #Zusammenführung der Signale
     tello.send_rc_control(0, controll_frontback, controll_updown, controll_yaw)
-    
-    
-    
-        
+     
 
 def face_track_fly(tello, distance):
     face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
