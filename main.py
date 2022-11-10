@@ -8,6 +8,7 @@ import mediapipe as mp
 from djitellopy import Tello
 from inputs import get_gamepad
 from PIL import Image, ImageTk
+from time import sleep
 
 from spacenavigator import Space_call
 
@@ -185,6 +186,30 @@ class GUI_mate():
             print('Cap initialized!')
             self.hand_track(lmain, cap)
 
+    def TK_face_track(self, label: Label, cam_state: bool, tello : Tello, face_object, face_cascade, distance: int):
+        """Initiliazises the Camera Stream, Distance should be regulated by a scale from 0 to 60 preferably in increments of 10"""
+        if cam_state == True:
+            facetracking = face_object
+            frame = tello.get_frame_read().frame
+            frame = facetracking.resize(frame)
+            
+            gray_image = facetracking.gray(frame)
+            detected_faces = face_cascade.detectMultiScale(gray_image, 1.1, 4)
+            for (x, y, w, h) in detected_faces:
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0))
+            if len(detected_faces) != 0:
+                facetracking.controlling(tello, detected_faces, distance)
+            else:
+                tello.send_rc_control(0, 0, 0, 0)
+            cv2.imshow("Detection", frame)
+            k = cv2.waitKey(30) & 0xff
+            img = Image.fromarray(frame)   # type: ignore
+            imgtk = ImageTk.PhotoImage(image=img)
+            label.imgtk = imgtk # type: ignore
+            label.configure(image=imgtk)
+
+
+
     def menus(self, window:Tk):    #Currently deprecated and not used in current build
         mn = Menu(window) 
         window.config(menu=mn) 
@@ -212,7 +237,7 @@ class GUI_mate():
         tello.set_speed(val)
         print(val)
 
-    def hand_track(self, label: Label, capture):
+    def hand_track(self, label: Label, capture):    # Replaced by the new HandDetection class
         """Older version of the Hand Tracking developed by Calvin (and Google), label = placement as a label widget, cap = camera """
         lmain = label
         cap = capture
@@ -232,21 +257,22 @@ class GUI_mate():
         lmain.imgtk = imgtk # type: ignore
         lmain.configure(image=imgtk)
     
-    def buttons(self, v: StringVar,throt: IntVar, label: Label, window: Tk):
+    def buttons(self, v: StringVar,throt: IntVar, web_label: Label, dro_label: Label , window: Tk):
         """Buttons used by the main Window, v is a variable used to controll the actions taken by the menu, label is for the Hand Tracking Camera and window is the... well window"""
 
-        colour_lib = {"light bluish Grey":"#D6E0EF", "light Grey" : "#ededed"}
+        colour_lib = {"light bluish Grey":"#D6E0EF", "light Grey" : "#ededed", 'grey 16':'#292929'}
         print("Creating buttons...")
-        lmain = label
+        lmain = web_label
         root = window
-        r_btn_frame = Frame(window, background= "#ededed", width= 20, padx=5)
+        r_btn_frame = Frame(window, background= "#292929", width= 30, padx=5)
         r_btn_frame.pack(side='left', fill=Y)
 
-        l_btn_frame = Frame(window, background= "#ededed", width= 20, padx=5)
+        l_btn_frame = Frame(window, background= "#292929", width= 30, padx=5)
         l_btn_frame.pack(side='right', fill=Y)
 
-        low_scale_frame = Frame(window, background= "#ededed", height= 60, pady= 5)
+        low_scale_frame = Frame(window, background= "#292929", height= 100, pady= 5)
         low_scale_frame.pack(side='bottom', fill= X)
+
 
         # Radiobuttons used to switch between Controll modes, still not very pretty...
         xbox_btn = Radiobutton(root, text = "Xbox", variable = v, value = "1", indicator = 0, background = "#D6E0EF", height=1, width= 15)   # type: ignore
@@ -259,21 +285,175 @@ class GUI_mate():
         btn_exit = Button(root, text="Exit", width=10, height=2, background= "#58181F", command = root.destroy)
 
         # Different Scales used to visualize Drone speed and Throttle controll
-        throt_sca = Scale(window, from_=100, to = 10, sliderlength = 50, length= 250, width= 25, variable = throt)
+        throt_sca = Scale(window, from_=100, to = 10, sliderlength = 50, length= 250, width= 25, variable = throt, bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929')
 
-        accel_sca = Scale(window, from_=10, to = 100, sliderlength = 50, length= 250, width= 25, orient='horizontal')
-        speed_sca = Scale(window, from_=10, to = 100, sliderlength = 50, length= 250, width= 25, orient='horizontal')
+        accel_sca = Scale(window, from_=10, to = 100, sliderlength = 50, length= 250, width= 25, orient='horizontal', bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929', showvalue= False)
+        speed_sca = Scale(window, from_=10, to = 100, sliderlength = 50, length= 250, width= 25, orient='horizontal', bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929', showvalue= False)
         # Placing everything
         xbox_btn.pack(side='bottom', in_= r_btn_frame)
         space_btn.pack(side='bottom', in_= r_btn_frame)
         face_btn.pack(side='bottom', in_= r_btn_frame)
         gest_btn.pack(side='bottom', in_= r_btn_frame)
 
+        btn_exit.pack(side='left', anchor=S, in_= l_btn_frame)
+        btn_con.pack(side='left', anchor=N, in_ = r_btn_frame)
+
         throt_sca.pack(side='right', anchor = N, in_ = l_btn_frame)
         accel_sca.pack(side='bottom', anchor=CENTER, in_= low_scale_frame)
         speed_sca.pack(side='bottom', anchor=CENTER, in_= low_scale_frame)
 
-        btn_con.pack(side='left', anchor=N, in_ = r_btn_frame)
-        btn_exit.pack(side='bottom', anchor=E, in_= l_btn_frame)
-        lmain.pack(anchor=CENTER)
+        lmain.pack(side = 'left', anchor=W)
+        web_label.pack(side = 'left', anchor= W)
         print("buttons created")
+
+class HandDetection():
+    def __init__(self, mode=False, maxHands=2, modelComplexity = 1, detectionCon=float(0.5), trackCon=float(0.5)):
+        self.mode = mode
+        self.maxHands = maxHands
+        self.modelComplexity = modelComplexity
+        self.detectionCon = detectionCon
+        self.trackCon = trackCon
+        
+        self.mpHands = mp.solutions.hands   # type: ignore
+        self.hands = self.mpHands.Hands(self.mode, self.maxHands, self.modelComplexity, self.detectionCon, self.trackCon)
+        self.mpDraw = mp.solutions.drawing_utils   # type: ignore
+
+ 
+
+
+    def tracking(self, image, draw = True):
+
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        self.results = self.hands.process(image_rgb)
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        if self.results.multi_hand_landmarks:
+            for hand_landmarks in self.results.multi_hand_landmarks:
+                if draw:
+                    self.mpDraw.draw_landmarks(image, hand_landmarks, self.mpHands.HAND_CONNECTIONS)
+        return image
+
+
+
+
+    def positions(self, img, handNo=0, draw=True):
+        self.lmlist = []
+        if self.results.multi_hand_landmarks:
+            myhand = self.results.multi_hand_landmarks[handNo]
+            for id, lm in enumerate(myhand.landmark):
+                h, w, c = img.shape
+                cx, cy = int(lm.x * w), int(lm.y * h)
+                self.lmlist.append([id, cx, cy])
+                if draw:
+                    cv2.circle(img, (cx, cy), 15, (255, 0, 255), cv2.FILLED)
+        return self.lmlist
+
+
+
+
+    def tellocontroll(self, tello, speed):
+        liste = self.lmlist
+        if len(liste) != 0:
+            if (liste[8][2]-liste[5][2]) < 150 and (liste[8][2]-liste[5][2]) > -150:
+                if (liste[4][1]-liste[20][1]) > 300 or (liste[4][1]-liste[20][1]) < -300:
+                    
+                    if liste[4][1] < liste[20][1] and (liste[17][2]-liste[20][2]) < 100:
+                        tello.send_rc_control(-speed, 0, 0, 0)
+                    
+                    elif liste[4][1] > liste[20][1] and (liste[17][2]-liste[20][2]) < 100:
+                        tello.send_rc_control(speed, 0, 0, 0)
+                
+                elif (liste[4][1]-liste[20][1]) < 300 or (liste[4][1]-liste[20][1]) > -300:
+                    
+                    if liste[4][2] < liste[20][2] and (liste[17][1]-liste[20][1]) < 100:
+                        tello.send_rc_control(0, 0, speed, 0)
+                    
+                    elif liste[4][2] > liste[20][2] and (liste[17][1]-liste[20][1]) < 100:
+                        tello.send_rc_control(0, 0, -speed, 0)
+            else:
+                tello.send_rc_control(0, 0, 0, 0)
+        else:
+            tello.send_rc_control(0, 0, 0, 0)
+
+    def Tk_handflight(self, tello: Tello, camera, label: Label):
+        succes, img = camera.read()
+        img = cv2.cvtColor(cv2.flip(img,1),cv2.COLOR_BGR2RGB)
+        img = self.tracking(img)
+        lmlist = self.positions(img)
+        
+        self.tellocontroll(tello, 100)
+        
+        img = Image.fromarray(img)   # type: ignore 
+        imgtk = ImageTk.PhotoImage(image=img)        
+        label.imgtk = imgtk # type: ignore
+        label.configure(image=imgtk)        
+
+
+class FaceTracking():
+    def resize(self, image):
+        resized = cv2.resize(image, (600, 400), interpolation=cv2.INTER_LINEAR)
+        return resized
+
+    def gray(self, image):
+        gray_frame = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        return gray_frame
+
+    def controlling(self, tello, faces, distance):
+        width_middle = 300
+        height_middle = 200
+
+        #yaw Abfrage
+        if (faces[0][0]-width_middle)/4 > 100:
+            controll_yaw = 100
+        elif (faces[0][0]-width_middle)/4 < -100:
+            controll_yaw = -100
+        else:
+            controll_yaw = int((faces[0][0]-width_middle)/4)
+
+        #Height Abfrage
+        if (height_middle-faces[0][1])/3 > 100:
+            controll_updown = 100
+        elif (height_middle-faces[0][1])/3 < -100:
+            controll_updown = -100
+        else:
+            controll_updown = int((height_middle-faces[0][1])/3)
+
+        #Offset Abfrage
+        if distance > 7:
+            offset = 15
+        else:
+            offset = 5
+
+        #Front Back Abfrage
+        if faces[0][2] > (distance*10+offset):
+            controll_frontback = -15
+        elif faces[0][2] < (distance*10+offset) and faces[0][2] > (distance*10):
+            controll_frontback = 0
+        elif faces[0][2] < (distance*10):
+            controll_frontback = 15
+        else:
+            controll_frontback = 0
+
+        #Zusammenführung der Signale
+        tello.send_rc_control(0, controll_frontback, controll_updown, controll_yaw)     
+
+    def face_track_fly(self, tello, distance):
+        face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+
+        while True:
+            frame = tello.get_frame_read().frame
+            frame = self.resize(frame)
+            gray_image = self.gray(frame)
+            detected_faces = face_cascade.detectMultiScale(gray_image, 1.1, 4)
+            print(detected_faces)
+            for (x, y, w, h) in detected_faces:
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0))
+            if len(detected_faces) != 0:
+                self.controlling(tello, detected_faces, distance)
+            else:
+                tello.send_rc_control(0, 0, 0, 0)
+            cv2.imshow("Detection", frame)
+            k = cv2.waitKey(30) & 0xff
+            if k == 27:
+                break
+            sleep(1/30)
+

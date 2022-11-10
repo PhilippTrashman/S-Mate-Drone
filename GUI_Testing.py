@@ -7,10 +7,11 @@ if __name__ == "__main__":
     tello = Tello()
     root = Tk()
     lmain = Label(root)
+    ldrone = Label(root)
 
-    start.init(root, False)
+    start.init(root, True)
 
-    cam_state = True
+    cam_state = False
     width, height = 800, 600
 
     if cam_state == True:
@@ -25,13 +26,17 @@ if __name__ == "__main__":
     cont_var = StringVar(root, "0")
     throt_var = IntVar(root, 100)
 
-    start.buttons(cont_var,throt_var, lmain, root)
+    start.buttons(cont_var,throt_var, lmain, ldrone,  root)
+    tello.streamon()
+    drone_cam = tello.get_frame_read().frame
 
     joy = XboxController()
     space = Space_call()
+    hand = HandDetection()
     help = 0
     xbox_flag = False
     space_flag = False
+    flight_flag = False
     while True:
         if root.state() != 'normal':    # Forcefully closes everything, calles Attribute and Traceback Errors
             root.destroy()
@@ -57,7 +62,12 @@ if __name__ == "__main__":
             print("Face tracking")
         
         elif controller == "4":
-            print("Gesture tracking")
+            if flight_flag == False:
+                tello.takeoff()
+                flight_flag = True
+            
+            else:
+                hand.Tk_handflight(tello, drone_cam, ldrone)
         
         root.update()
         sleep(0.001)
