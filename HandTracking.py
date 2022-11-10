@@ -1,8 +1,7 @@
 import cv2 
 import mediapipe as mp
 from djitellopy import Tello
-from time import *
-
+import time
 class HandDetection():
     def __init__(self, mode=False, maxHands=2, modelComplexity = 1, detectionCon=float(0.5), trackCon=float(0.5)):
         self.mode = mode
@@ -80,9 +79,16 @@ def main():
     tello.connect()
     tello.streamoff()
     tello.streamon()
+
+    prev_frame_time = 0
+    new_frame_time = 0
+    font = cv2.FONT_HERSHEY_SIMPLEX
+
     cap = cv2.VideoCapture(0)
     handtrack = HandDetection()
+
     help = 0
+
     while True:
         success, img = cap.read()
         img = cv2.cvtColor(cv2.flip(img,1),cv2.COLOR_BGR2RGB)
@@ -91,10 +97,15 @@ def main():
         #if len(lmlist) != 0:
             #print(lmlist[8])
             #print(lmlist[12])
-        if help == 0:
-            tello.takeoff()
-            help += 1
-        handtrack.tellocontroll(tello, 100) #Integer refers to speed (0-100)
+        if help != 0:
+            handtrack.tellocontroll(tello, 100) #Integer refers to speed (0-100)
+
+        new_frame_time = time.time()
+        fps = 1/(new_frame_time-prev_frame_time)
+        prev_frame_time = new_frame_time
+        fps = int(fps)
+        fps_str = str(fps)
+        cv2.putText(img, fps_str, (7, 70), font, 3, (100, 255, 0), 3, cv2.LINE_AA)
 
         cv2.imshow("Hand Tracking", img)
         k = cv2.waitKey(30) & 0xff
@@ -103,6 +114,9 @@ def main():
             cv2.destroyAllWindows()
             cv2.waitKey(1)
             break
+        if help == 0 and fps > 7:
+            tello.takeoff()
+            help += 1
     tello.land()
     tello.streamoff()
 
