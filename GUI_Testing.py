@@ -21,10 +21,10 @@ if __name__ == "__main__":
     start.init(root, False)
 
     # Testing case to enable and disable the cameras
-    cam_state = False
+    cam_state = True
     hand_track_flag = True
 
-    drone_state = True
+    drone_state = False
     d_cam_state = True
 
     # setting the width and height for the Webcam
@@ -52,31 +52,34 @@ if __name__ == "__main__":
 
             face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
+
     cont_var = StringVar(root, "0")
+    dcam_var = StringVar(root, "0")
     throt_var = IntVar(root, 100)
 
-    start.buttons(cont_var,throt_var, lmain, ldrone,  root)
+
+    start.buttons(cont_var,throt_var, lmain, root, dcam_var, tello) 
 
 
-    help = 0
     xbox_flag = False
     space_flag = False
     flight_flag = True
-
+    print("starting loop")
     while True:
-        if root.state() != 'normal':    # Forcefully closes everything, calles Attribute and Traceback Errors
-            root.destroy()
+        if root.state() != 'normal':        # Forcefully closes everything, calles Attribute and Traceback Errors
+            start.total_annihilation(dcam_var, tello,  root)
 
-        if cam_state == True:           # If the cam has been enabled hand tracking will also start, not sure if this can be implemented to only start if enabled in the GUI
+        if cam_state == True:               # If the cam has been enabled hand tracking will also start, not sure if this can be implemented to only start if enabled in the GUI
             start.hand_track(lmain, cap)    #type: ignore
        
+        cam_stream = dcam_var.get()
         controller = cont_var.get()
 
-        if controller == "1":           # Enters Xbox Controll Mode
-            joy.flight_xbox(tello, help)
+        if controller == "1":               # Enters Xbox Controll Mode
+            joy.flight_xbox(tello)
             print(joy.read())
 
-        elif controller == "2":         # Should work with a Space Mouse, not yet tested
+        elif controller == "2":             # Should work with a Space Mouse, not yet tested
             if space_flag == False:
                 dev = space.open(callback=None, button_callback=space.toggle_led)
                 space_flag = True
@@ -84,7 +87,7 @@ if __name__ == "__main__":
             elif space_flag == True:
                 space.flight(tello, help)
 
-        elif controller == "3":         # used to controll the drone via face tracking
+        elif controller == "3":             # used to controll the drone via face tracking
             if drone_state == False:
                 tello.connect()
                 print("turning the drone stream on...")
@@ -98,9 +101,9 @@ if __name__ == "__main__":
                 drone_state = True
             
             else:
-                face.tk_facetrack(tello, 20, face_cascade, ldrone)  #type: ignore
+                face.tk_facetrack(tello, 20, face_cascade)  #type: ignore
 
-        elif controller == "4":
+        elif controller == "4":             #Is the Gesture Tracking
             if drone_state == False:
                 print("turning the drone stream on...")
                 tello.streamoff()
@@ -115,12 +118,11 @@ if __name__ == "__main__":
                     tello.takeoff()
                     flight_flag = True
 
-                else:
-                    start.drone_stream(ldrone, drone_cam, tello)    #type: ignore
+        if cam_stream == "1":
+            start.drone_stream(tello)
 
-        
         root.update()
-        sleep(0.001)
+        sleep(1/60)
 
 
 

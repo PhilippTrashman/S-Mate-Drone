@@ -129,21 +129,23 @@ class XboxController(object):
                 elif event.code == 'ABS_HAT0Y':
                     self.DPadY = event.state
 
-    def flight_xbox(self, tello, help):
+    def flight_xbox(self, tello):
         """Used as the main Controll function for the drone, needs more jokes"""
         cont = self
-
+        helper = 0
         print(cont.read())
         if cont.read()[15] == 1:
             easygui.msgbox("Press 'Ok' to engage throw takeoff",title="Info")
             tello.initiate_throw_takeoff()
-            help = 1
-        elif cont.read()[14] == 1 and help == 0:
+            helper = 1
+        elif cont.read()[14] == 1 and helper == 0:
             tello.takeoff()
-            help = 1
+            helper = 1
             print("Takeoff")
-        elif cont.read()[14] == 1 and help != 0:
+        elif cont.read()[14] == 1 and helper != 0:
             tello.land()
+            helper = 0
+            print("landing")
         elif cont.read()[9] == 1:
             tello.flip("b")
         elif cont.read()[8] == -1:
@@ -227,21 +229,27 @@ class GUI_mate():
         lmain.imgtk = imgtk # type: ignore
         lmain.configure(image=imgtk)
     
-    def drone_stream(self, label: Label, capture, tello : Tello):
+    def drone_stream(self, tello: Tello):
         """simple drone video Feed"""
         frame = tello.get_frame_read().frame
-        img = Image.fromarray(frame)    #type: ignore
-        imgtk = ImageTk.PhotoImage(image=img)
-        label.imgtk = imgtk # type: ignore
+        cv2.imshow("stream", frame)
 
+    def total_annihilation(self, drone_state, tello: Tello, root:Tk):
+        """Just used for the Exit button to actually close all the windows""" 
+        cv2.destroyAllWindows()
+        if drone_state == "1":
+            tello.streamoff()
+        root.destroy()
 
-    def buttons(self, v: StringVar,throt: IntVar, web_label: Label, dro_label: Label , window: Tk):
+    def buttons(self, v: StringVar,throt: IntVar, web_label: Label,window: Tk, drone_state: StringVar, tello):
         """Buttons used by the main Window, v is a variable used to controll the actions taken by the menu, label is for the Hand Tracking Camera and window is the... well window"""
-
+        drone = drone_state.get()
         colour_lib = {"light bluish Grey":"#D6E0EF", "light Grey" : "#ededed", 'grey 16':'#292929'}
         print("Creating buttons...")
         lmain = web_label
+
         root = window
+        # Frames for the Placements of the widgets
         r_btn_frame = Frame(window, background= "#292929", width= 30, padx=5)
         r_btn_frame.pack(side='left', fill=Y)
 
@@ -251,16 +259,17 @@ class GUI_mate():
         low_scale_frame = Frame(window, background= "#292929", height= 100, pady= 5)
         low_scale_frame.pack(side='bottom', fill= X)
 
-
-        # Radiobuttons used to switch between Controll modes, still not very pretty...
+        # Radiobuttons used to switch between controll modes, still not very pretty...
         xbox_btn = Radiobutton(root, text = "Xbox", variable = v, value = "1", indicator = 0, background = "#D6E0EF", height=1, width= 15)   # type: ignore
         space_btn = Radiobutton(root, text= "Space Mouse", variable= v, value= "2", indicator = 0, background = "#D6E0EF", height=1, width= 15)   # type: ignore
         face_btn = Radiobutton(root, text= "Face Tracking", variable= v, value= "3", indicator = 0, background = "#D6E0EF", height=1, width= 15)   # type: ignore
         gest_btn = Radiobutton(root, text= "Gesture Tracking", variable= v, value= "4", indicator = 0, background = "#D6E0EF", height=1, width= 15)   # type: ignore
 
+        streamon_btn = Radiobutton(root, text = "Drone Stream On", variable = drone_state, value = "1", indicator = 0, background = "#D6E0EF", height=1, width= 15) 
+        streamoff_btn = Radiobutton(root, text = "Drone Stream Off", variable = drone_state, value = "0", indicator = 0, background = "#D6E0EF", height=1, width= 15)
         # Different Buttons that are still unfinished
         btn_con = Button(root, text="connect", width=10, height=2, background= '#D6E0EF')
-        btn_exit = Button(root, text="Exit", width=10, height=2, background= "#58181F", command = root.destroy)
+        btn_exit = Button(root, text="Exit", width=10, height=2, background= "#58181F", command = lambda: self.total_annihilation(drone, tello,  root))
 
         # Different Scales used to visualize Drone speed and Throttle controll
         throt_sca = Scale(window, from_=100, to = 10, sliderlength = 50, length= 250, width= 25, variable = throt, bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929')
@@ -273,6 +282,9 @@ class GUI_mate():
         face_btn.pack(side='bottom', in_= r_btn_frame)
         gest_btn.pack(side='bottom', in_= r_btn_frame)
 
+        streamon_btn.pack(side='left', in_ = r_btn_frame)
+        streamoff_btn.pack(side='left', in_ = r_btn_frame)
+
         btn_exit.pack(side='left', anchor=S, in_= l_btn_frame)
         btn_con.pack(side='left', anchor=N, in_ = r_btn_frame)
 
@@ -280,8 +292,8 @@ class GUI_mate():
         accel_sca.pack(side='bottom', anchor=CENTER, in_= low_scale_frame)
         speed_sca.pack(side='bottom', anchor=CENTER, in_= low_scale_frame)
 
-        lmain.pack(side = 'left', anchor=W)
-        dro_label.pack(side = 'right', anchor= E)
+        lmain.pack()
+
         print("buttons created")
 
 class HandDetection():
@@ -296,9 +308,6 @@ class HandDetection():
         self.hands = self.mpHands.Hands(self.mode, self.maxHands, self.modelComplexity, self.detectionCon, self.trackCon)
         self.mpDraw = mp.solutions.drawing_utils   # type: ignore
 
- 
-
-
     def tracking(self, image, draw = True):
 
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -309,9 +318,6 @@ class HandDetection():
                 if draw:
                     self.mpDraw.draw_landmarks(image, hand_landmarks, self.mpHands.HAND_CONNECTIONS)
         return image
-
-
-
 
     def positions(self, img, handNo=0, draw=True):
         self.lmlist = []
@@ -324,9 +330,6 @@ class HandDetection():
                 if draw:
                     cv2.circle(img, (cx, cy), 15, (255, 0, 255), cv2.FILLED)
         return self.lmlist
-
-
-
 
     def tellocontroll(self, tello, speed):
         liste = self.lmlist
@@ -367,7 +370,7 @@ class HandDetection():
 
 
 class FaceTracking():
-    def resize(self, image):
+    def resize(self, image):                #Smaller Picture
         resized = cv2.resize(image, (600, 400), interpolation=cv2.INTER_LINEAR)
         return resized
 
@@ -414,7 +417,7 @@ class FaceTracking():
         #Zusammenführung der Signale
         tello.send_rc_control(0, controll_frontback, controll_updown, controll_yaw)     
 
-    def face_track_fly(self, tello, distance):
+    def face_track_fly(self, tello: Tello, distance: int):
         face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
         while True:
@@ -435,7 +438,7 @@ class FaceTracking():
                 break
             sleep(1/30)
     
-    def tk_facetrack(self, tello: Tello, distance: int, cascade, label: Label):
+    def tk_facetrack(self, tello: Tello, distance: int, cascade):
         frame = tello.get_frame_read().frame
         frame = self.resize(frame)
         gray_image = self.gray(frame)
@@ -447,8 +450,9 @@ class FaceTracking():
             self.controlling(tello, detected_faces, distance)
         else:
             tello.send_rc_control(0, 0, 0, 0)
-        
-        img = Image.fromarray(frame)    #type: ignore
-        imgtk = ImageTk.PhotoImage(image=img)
-        label.imgtk = imgtk     #type: ignore
+        cv2.imshow("Detection", frame)
+        # img = Image.fromarray(frame)    #type: ignore
+        # imgtk = ImageTk.PhotoImage(image=img)
+        # label.imgtk = imgtk     #type: ignore
+
 
