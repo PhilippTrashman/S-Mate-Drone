@@ -169,7 +169,6 @@ class GUI_mate():
 
         print('UI initialized!')
 
-
     def init_camera(self, label: Label, cam_state: bool):    # Does not work when called as a function initself
         """NOT WORKING, DONT USE!"""
         width, height = 800, 600
@@ -209,21 +208,13 @@ class GUI_mate():
         tello.set_speed(val)
         print(val)
 
-    def hand_track(self, label: Label, capture):    # Replaced by the new HandDetection class
+    def Cam(self, label: Label, capture):    # Replaced by the new HandDetection class
         """Older version of the Hand Tracking developed by Calvin (and Google), label = placement as a label widget, cap = camera """
         lmain = label
         cap = capture
-        mp_drawing = mp.solutions.drawing_utils   # type: ignore
-        mp_drawing_styles = mp.solutions.drawing_styles   # type: ignore
-        mphands = mp.solutions.hands   # type: ignore
-        hands = mphands.Hands()
+
         data,image=cap.read()
         image = cv2.cvtColor(cv2.flip(image,1),cv2.COLOR_BGR2RGB)
-        result = hands.process(image)
-
-        if result.multi_hand_landmarks:
-            for hand_landmarks in result.multi_hand_landmarks:
-                mp_drawing.draw_landmarks(image, hand_landmarks, mphands.HAND_CONNECTIONS)
         img = Image.fromarray(image)   # type: ignore
         imgtk = ImageTk.PhotoImage(image=img)
         lmain.imgtk = imgtk # type: ignore
@@ -297,16 +288,19 @@ class GUI_mate():
         print("buttons created")
 
 class HandDetection():
-    def __init__(self, mode=False, maxHands=2, modelComplexity = 1, detectionCon=float(0.5), trackCon=float(0.5)):
+    def __init__(self, mode=False, maxHands=2, modelComplexity = 1, detectionCon=float(0.3), trackCon=float(0.3)):
         self.mode = mode
         self.maxHands = maxHands
         self.modelComplexity = modelComplexity
         self.detectionCon = detectionCon
         self.trackCon = trackCon
         
-        self.mpHands = mp.solutions.hands   # type: ignore
+        self.mpHands = mp.solutions.hands
         self.hands = self.mpHands.Hands(self.mode, self.maxHands, self.modelComplexity, self.detectionCon, self.trackCon)
-        self.mpDraw = mp.solutions.drawing_utils   # type: ignore
+        self.mpDraw = mp.solutions.drawing_utils
+
+ 
+
 
     def tracking(self, image, draw = True):
 
@@ -318,6 +312,9 @@ class HandDetection():
                 if draw:
                     self.mpDraw.draw_landmarks(image, hand_landmarks, self.mpHands.HAND_CONNECTIONS)
         return image
+
+
+
 
     def positions(self, img, handNo=0, draw=True):
         self.lmlist = []
@@ -331,43 +328,63 @@ class HandDetection():
                     cv2.circle(img, (cx, cy), 15, (255, 0, 255), cv2.FILLED)
         return self.lmlist
 
+
+
+
     def tellocontroll(self, tello, speed):
         liste = self.lmlist
         if len(liste) != 0:
-            if (liste[8][2]-liste[5][2]) < 150 and (liste[8][2]-liste[5][2]) > -150:
+
+            #Distance between Index Finger Tip and Index Finger MCP
+            if (liste[8][2]-liste[5][2]) < 150 and (liste[8][2]-liste[5][2]) > -150 and (liste[8][1]-liste[5][1]) < 150 and (liste[8][1]-liste[5][1]) > -150:
+
+                #Distance between Thumb Tip and Pinky Tip bigger than 300(x-Achsis)?
                 if (liste[4][1]-liste[20][1]) > 300 or (liste[4][1]-liste[20][1]) < -300:
                     
+                    #Is Thumb to the left or the right of Pinky 
                     if liste[4][1] < liste[20][1] and (liste[17][2]-liste[20][2]) < 100:
                         tello.send_rc_control(-speed, 0, 0, 0)
                     
                     elif liste[4][1] > liste[20][1] and (liste[17][2]-liste[20][2]) < 100:
                         tello.send_rc_control(speed, 0, 0, 0)
                 
+                #Distance between Thumb Tip and Pinky Tip smaller than 300 (x-Achsis)?
                 elif (liste[4][1]-liste[20][1]) < 300 or (liste[4][1]-liste[20][1]) > -300:
                     
+                    #Is Thumb over or under Pinky (y-Achsis)
                     if liste[4][2] < liste[20][2] and (liste[17][1]-liste[20][1]) < 100:
                         tello.send_rc_control(0, 0, speed, 0)
                     
                     elif liste[4][2] > liste[20][2] and (liste[17][1]-liste[20][1]) < 100:
                         tello.send_rc_control(0, 0, -speed, 0)
+            
+            #Distance between Index Finger Tip and Index Finger MCP below 300 (both Achsis)
+            elif (liste[8][2]-liste[5][2]) > 150 or (liste[8][2]-liste[5][2]) < -150 and (liste[12][2]-liste[9][2]) < 100 and (liste[12][2]-liste[9][2]) > -100:
+                
+                if (liste[8][1]-liste[0][1]) < 300 or (liste[8][1]-liste[0][1]) > -300:
+                    if liste[8][2] > liste[5][2]:
+                        tello.send_rc_control(0, -speed, 0, 0)
+                    elif liste[8][2] < liste[5][2]:
+                        tello.send_rc_control(0, speed, 0, 0)
             else:
-                tello.send_rc_control(0, 0, 0, 0)
+                if (liste[12][2]-liste[9][2]) < 100 and (liste[12][2]-liste[9][2]) > -100:
+                    if liste[8][1] > liste[0][1]:
+                        tello.send_rc_control(0, 0, 0, speed)
+                    else:
+                        tello.send_rc_control(0, 0, 0, -speed)
+                else:
+                    tello.send_rc_control(0, 0, 0, 0)
         else:
             tello.send_rc_control(0, 0, 0, 0)
 
-    def Tk_handflight(self, tello: Tello, camera, label: Label):
-        succes, img = camera.read()
+    def tk_handflight(self, tello: Tello, cam, throt: int):
+        data, img = cam.read()
         img = cv2.cvtColor(cv2.flip(img,1),cv2.COLOR_BGR2RGB)
         img = self.tracking(img)
         lmlist = self.positions(img)
-        
-        self.tellocontroll(tello, 100)
-        
-        img = Image.fromarray(img)   # type: ignore 
-        imgtk = ImageTk.PhotoImage(image=img)        
-        label.imgtk = imgtk # type: ignore
-        label.configure(image=imgtk)        
+        self.tellocontroll(tello, throt)
 
+        # cv2.imshow("Hand Tracking", img)
 
 class FaceTracking():
     def resize(self, image):                #Smaller Picture
