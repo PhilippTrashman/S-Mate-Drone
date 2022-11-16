@@ -17,15 +17,16 @@ if __name__ == "__main__":
     lmain = Label(root)
     ldrone = Label(root)
 
-    # Starting the Window
-    start.init(root, False)
 
     # Testing case to enable and disable the cameras
     cam_state = True
 
-    drone_state = True
+    drone_state = False
     d_cam_state = True
 
+    # Starting the Window
+
+    start.init(root, False, tello)
     # setting the width and height for the Webcam
     width, height = 1920, 1080
 

@@ -158,14 +158,14 @@ class XboxController(object):
 
 class GUI_mate():
 
-    def init(self, window, drone_state:bool):
+    def init(self, window, drone_state:bool, tello):
         """Is the Starting point for the UI, calling if the DJI Drone is enabled, later optional Activation should be implemented"""
         print('Started!')
 
         print('Init UI...')
         root = window
         root.title("S.Mate Drone")
-        root.bind('<Escape>', lambda e: root.quit())
+        root.bind('<Escape>', lambda e: self.total_annihilation(drone_state, tello, root))
 
         print('UI initialized!')
 
@@ -182,6 +182,7 @@ class GUI_mate():
             self.hand_track(lmain, cap)
 
     def menus(self, window:Tk):    #Currently deprecated and not used in current build
+        """Makes Dropdown menus for the window... Use may not actually be necessary"""
         mn = Menu(window) 
         window.config(menu=mn) 
         file_menu = Menu(mn) 
