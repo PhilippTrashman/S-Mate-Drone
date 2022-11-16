@@ -129,22 +129,22 @@ class XboxController(object):
                 elif event.code == 'ABS_HAT0Y':
                     self.DPadY = event.state
 
-    def flight_xbox(self, tello):
-        """Used as the main Controll function for the drone, needs more jokes"""
+    def flight_xbox(self, tello, helper, speed: int):
+        """Used as the main Controll function for the drone, needs more jokes, uses the GTA Controll Setup"""
         cont = self
-        helper = 0
-        print(cont.read())
-        if cont.read()[15] == 1:
+
+        # print(cont.read())
+        if cont.read()[14] == 1:
             easygui.msgbox("Press 'Ok' to engage throw takeoff",title="Info")
             tello.initiate_throw_takeoff()
-            helper = 1
-        elif cont.read()[14] == 1 and helper == 0:
+            helper += 1
+        elif cont.read()[15] == 1 and helper == 0:
             tello.takeoff()
-            helper = 1
+            helper += 1
             print("Takeoff")
-        elif cont.read()[14] == 1 and helper != 0:
+        elif cont.read()[15] == 1 and helper != 0:
             tello.land()
-            helper = 0
+            helper -= 1
             print("landing")
         elif cont.read()[9] == 1:
             tello.flip("b")
@@ -154,7 +154,74 @@ class XboxController(object):
             tello.flip("f")
         elif cont.read()[8] == 1:
             tello.flip("r")
-        tello.send_rc_control(int(cont.read()[0]*100), int(cont.read()[1]*100), int(cont.read()[16]*100), int(cont.read()[3]*100))
+        tello.send_rc_control(int(cont.read()[0]*speed), int(cont.read()[1]*speed), int(cont.read()[16]*speed), int(cont.read()[3]*100))
+        return helper
+        
+    def flight_xbox_classic(self, tello, helper: int, speed :int):
+        """More Classic Drone Controll, as requested"""
+        cont = self
+
+        # print(cont.read())
+        if cont.read()[14] == 1:
+            easygui.msgbox("Press 'Ok' to engage throw takeoff",title="Info")
+            tello.initiate_throw_takeoff()
+            helper += 1
+        elif cont.read()[15] == 1 and helper == 0:
+            tello.takeoff()
+            helper += 1
+            print("Takeoff")
+        elif cont.read()[15] == 1 and helper != 0:
+            tello.land()
+            helper -= 1
+            print("landing")
+        elif cont.read()[9] == 1:
+            tello.flip("b")
+        elif cont.read()[8] == -1:
+            tello.flip("l")
+        elif cont.read()[9] == -1:
+            tello.flip("f")
+        elif cont.read()[8] == 1:
+            tello.flip("r")
+        tello.send_rc_control(int(cont.read()[3]*speed), int(cont.read()[2]*speed), int(cont.read()[1]*speed), int(cont.read()[0]*100))
+        return helper
+
+    def define_speed_xbox(self, current_speed) -> int:
+        """For Xbox controll mode!, Returns a value to reduce or increase drone speed for controllers in increments of 5"""
+        joy = self
+        slower = joy.read()[5]
+        faster = joy.read()[6]
+        speed = 0
+        if faster == 1 and slower == 0:
+            speed = 1
+        elif slower == 1 and faster == 0:
+            speed = -1     
+
+        speed = current_speed + speed
+        if speed <= 0:
+            speed = 1
+        
+        elif speed > 100:
+            speed = 100
+        
+        return speed        
+
+    def define_speed_classic(self, current_speed) -> int:
+        """For Classic controll mode!, Returns a value to reduce or increase drone speed for controllers in increments of 5"""
+        joy = self
+        input = joy.read()[16]
+        speed = 0
+        if input > 0.5:
+            speed = 1
+        elif input < -0.5:
+            speed = -1       
+
+        speed = current_speed + speed
+        if speed <= 0:
+            speed = 1
+        
+        elif speed > 100:
+            speed = 100       
+        return speed
 
 class GUI_mate():
 
@@ -179,7 +246,7 @@ class GUI_mate():
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
             print('Cap initialized!')
-            self.hand_track(lmain, cap)
+            self.hand_track(lmain, cap)     #type: ignore
 
     def menus(self, window:Tk):    #Currently deprecated and not used in current build
         """Makes Dropdown menus for the window... Use may not actually be necessary"""
@@ -205,9 +272,26 @@ class GUI_mate():
 
     def throttle(self, val, tello:Tello):
         """Used in conjunction with a Tkinter Scale to Throttle the speed the DJI Drone"""
-        val = int(val)
+
         tello.set_speed(val)
         print(val)
+
+    def get_total_accle(self, tello: Tello) -> int:
+        x_accle = tello.get_acceleration_x()
+        y_accle = tello.get_acceleration_y()
+        z_accle = tello.get_acceleration_z()
+
+        if x_accle >= y_accle and z_accle:
+            x_accle = int(x_accle)
+            return x_accle
+
+        elif y_accle >= x_accle and z_accle:
+            y_accle = int(y_accle)
+            return y_accle
+        
+        else:
+            z_accle = int(z_accle)
+            return z_accle
 
     def Cam(self, label: Label, capture):    # Replaced by the new HandDetection class
         """Older version of the Hand Tracking developed by Calvin (and Google), label = placement as a label widget, cap = camera """
@@ -229,8 +313,7 @@ class GUI_mate():
     def total_annihilation(self, drone_state, tello: Tello, root:Tk):
         """Just used for the Exit button to actually close all the windows""" 
         cv2.destroyAllWindows()
-        if drone_state == "1":
-            tello.streamoff()
+
         root.destroy()
 
     def buttons(self, v: StringVar,throt: IntVar, web_label: Label,window: Tk, drone_state: StringVar, tello):
@@ -242,45 +325,48 @@ class GUI_mate():
 
         root = window
         # Frames for the Placements of the widgets
-        r_btn_frame = Frame(window, background= "#292929", width= 30, padx=5)
-        r_btn_frame.pack(side='left', fill=Y)
-
         l_btn_frame = Frame(window, background= "#292929", width= 30, padx=5)
-        l_btn_frame.pack(side='right', fill=Y)
+        l_btn_frame.pack(side='left', fill=Y)
+
+        r_btn_frame = Frame(window, background= "#292929", width= 30, padx=5)
+        r_btn_frame.pack(side='right', fill=Y)
 
         low_scale_frame = Frame(window, background= "#292929", height= 100, pady= 5)
         low_scale_frame.pack(side='bottom', fill= X)
 
         # Radiobuttons used to switch between controll modes, still not very pretty...
         xbox_btn = Radiobutton(root, text = "Xbox", variable = v, value = "1", indicator = 0, background = "#D6E0EF", height=1, width= 15)   # type: ignore
+        xbox_classic = Radiobutton(root, text = "Classic", variable = v, value = "5", indicator = 0, background = "#D6E0EF", height=1, width= 15)   # type: ignore
         space_btn = Radiobutton(root, text= "Space Mouse", variable= v, value= "2", indicator = 0, background = "#D6E0EF", height=1, width= 15)   # type: ignore
         face_btn = Radiobutton(root, text= "Face Tracking", variable= v, value= "3", indicator = 0, background = "#D6E0EF", height=1, width= 15)   # type: ignore
         gest_btn = Radiobutton(root, text= "Gesture Tracking", variable= v, value= "4", indicator = 0, background = "#D6E0EF", height=1, width= 15)   # type: ignore
 
-        streamon_btn = Radiobutton(root, text = "Drone Stream On", variable = drone_state, value = "1", indicator = 0, background = "#D6E0EF", height=1, width= 15) 
-        streamoff_btn = Radiobutton(root, text = "Drone Stream Off", variable = drone_state, value = "0", indicator = 0, background = "#D6E0EF", height=1, width= 15)
+
+        streamon_btn = Radiobutton(root, text = "On", variable = drone_state, value = "1", indicator = 0, background = "#D6E0EF", height=1, width= 7)         #type: ignore
+        streamoff_btn = Radiobutton(root, text = "Off", variable = drone_state, value = "0", indicator = 0, background = "#D6E0EF", height=1, width= 7)       #type: ignore
         # Different Buttons that are still unfinished
-        btn_con = Button(root, text="connect", width=10, height=2, background= '#D6E0EF')
+        btn_con = Button(root, text="connect", width=15, height=2, background= '#D6E0EF')
         btn_exit = Button(root, text="Exit", width=10, height=2, background= "#58181F", command = lambda: self.total_annihilation(drone, tello,  root))
 
         # Different Scales used to visualize Drone speed and Throttle controll
-        throt_sca = Scale(window, from_=100, to = 10, sliderlength = 50, length= 250, width= 25, variable = throt, bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929')
+        throt_sca = Scale(window, from_=100, to = 1, sliderlength = 50, length= 400, width= 25, variable = throt, bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929')
 
         accel_sca = Scale(window, from_=10, to = 100, sliderlength = 50, length= 250, width= 25, orient='horizontal', bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929', showvalue= False)
         speed_sca = Scale(window, from_=10, to = 100, sliderlength = 50, length= 250, width= 25, orient='horizontal', bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929', showvalue= False)
         # Placing everything
-        xbox_btn.pack(side='bottom', in_= r_btn_frame)
-        space_btn.pack(side='bottom', in_= r_btn_frame)
-        face_btn.pack(side='bottom', in_= r_btn_frame)
-        gest_btn.pack(side='bottom', in_= r_btn_frame)
+        xbox_btn.pack(side='bottom', in_= l_btn_frame)
+        xbox_classic.pack(side='bottom', in_= l_btn_frame)
+        space_btn.pack(side='bottom', in_= l_btn_frame)
+        face_btn.pack(side='bottom', in_= l_btn_frame)
+        gest_btn.pack(side='bottom', in_= l_btn_frame)
 
-        streamon_btn.pack(side='left', in_ = r_btn_frame)
-        streamoff_btn.pack(side='left', in_ = r_btn_frame)
+        btn_con.pack(side='top', anchor=W, in_ = l_btn_frame)
+        streamon_btn.pack(side='left', in_ = l_btn_frame)
+        streamoff_btn.pack(side='left', in_ = l_btn_frame)
 
-        btn_exit.pack(side='left', anchor=S, in_= l_btn_frame)
-        btn_con.pack(side='left', anchor=N, in_ = r_btn_frame)
+        btn_exit.pack(side='bottom', in_= r_btn_frame)
 
-        throt_sca.pack(side='right', anchor = N, in_ = l_btn_frame)
+        throt_sca.pack(anchor=CENTER,side="right", in_ = r_btn_frame)
         accel_sca.pack(side='bottom', anchor=CENTER, in_= low_scale_frame)
         speed_sca.pack(side='bottom', anchor=CENTER, in_= low_scale_frame)
 
@@ -296,9 +382,9 @@ class HandDetection():
         self.detectionCon = detectionCon
         self.trackCon = trackCon
         
-        self.mpHands = mp.solutions.hands
+        self.mpHands = mp.solutions.hands           #type: ignore
         self.hands = self.mpHands.Hands(self.mode, self.maxHands, self.modelComplexity, self.detectionCon, self.trackCon)
-        self.mpDraw = mp.solutions.drawing_utils
+        self.mpDraw = mp.solutions.drawing_utils    #type: ignore
 
  
 

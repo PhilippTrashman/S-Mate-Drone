@@ -101,9 +101,9 @@ class XboxController(object):
                     self.LeftThumb = event.state
                 elif event.code == 'BTN_THUMBR':
                     self.RightThumb = event.state
-                elif event.code == 'BTN_SELECT':
-                    self.Back = event.state
                 elif event.code == 'BTN_START':
+                    self.Back = event.state
+                elif event.code == 'BTN_SELECT':
                     self.Start = event.state
                 elif event.code == 'BTN_TRIGGER_HAPPY1':
                     self.LeftDPad = event.state

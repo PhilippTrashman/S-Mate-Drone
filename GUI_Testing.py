@@ -1,4 +1,4 @@
-from time import sleep
+from time import sleep, 
 
 from main import *
 
@@ -19,9 +19,9 @@ if __name__ == "__main__":
 
 
     # Testing case to enable and disable the cameras
-    cam_state = True
+    cam_state = False
 
-    drone_state = False
+    drone_state = True
     d_cam_state = True
 
     # Starting the Window
@@ -61,9 +61,11 @@ if __name__ == "__main__":
     xbox_flag = False
     space_flag = False
     flight_flag = True
+    throttle_comp = 0
     print("starting loop")
+    helper = 0
     while True:
-        if root.state() != 'normal':        # Forcefully closes everything, calles Attribute and Traceback Errors
+        if root.state() != 'normal':        # Forcefully closes everything, calls Attribute and Traceback Errors
             start.total_annihilation(dcam_var, tello,  root)
 
         if cam_state == True:               # If the cam has been enabled hand tracking will also start, not sure if this can be implemented to only start if enabled in the GUI
@@ -71,13 +73,14 @@ if __name__ == "__main__":
        
         cam_stream = dcam_var.get()
         controller = cont_var.get()
-        throttle = throt_var.get()
-
-        if controller == "1":               # Enters Xbox Controll Mode
-            joy.flight_xbox(tello)
-            print(joy.read())
-
-        elif controller == "2":             # Should work with a Space Mouse, not yet tested
+        speed = throt_var.get()
+        
+        if controller == "1":               # Xbox Controll Mode with GTA Config
+            speed = joy.define_speed_xbox(speed)
+            throt_var.set(speed)
+            helper = joy.flight_xbox(tello, helper, speed)
+            
+        elif controller == "2":             # Space Mouse, not yet tested
             if space_flag == False:
                 dev = space.open(callback=None, button_callback=space.toggle_led)
                 space_flag = True
@@ -85,7 +88,7 @@ if __name__ == "__main__":
             elif space_flag == True:
                 space.flight(tello, help)
 
-        elif controller == "3":             # used to controll the drone via face tracking
+        elif controller == "3":             # Face Tracking
             if drone_state == False:
                 tello.connect()
                 print("turning the drone stream on...")
@@ -101,15 +104,27 @@ if __name__ == "__main__":
             else:
                 face.tk_facetrack(tello, 20, face_cascade)  #type: ignore
 
-        elif controller == "4":             #Is the Gesture Tracking
+        elif controller == "4":             # Gesture Tracking
+            if cam_state == True:
+                hand.tk_handflight(tello, cap, throttle)    #type: ignore
+            
+            else:
+                print('Init cap...')
+                cap = cv2.VideoCapture(0)
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+                cam_state = True           
+                print('Cap initialized!')  
 
-            hand.tk_handflight(tello, cap, throttle)
+        elif controller == "5":             # Xbox Controller with more classic Drone Controll
+            speed = joy.define_speed_classic(speed)
+            throt_var.set(speed)
+            helper = joy.flight_xbox_classic(tello, helper, speed)
                 
-
-        if cam_stream == "1":
+        if cam_stream == "1":               # Drone Stream
             start.drone_stream(tello)
 
-        root.update()
+        root.update()                       # Updates the UI, alternativ to mainloop
         sleep(1/60)
 
 
