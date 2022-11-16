@@ -1,4 +1,4 @@
-from time import sleep, 
+from time import sleep
 
 from main import *
 
@@ -53,9 +53,12 @@ if __name__ == "__main__":
     cont_var = StringVar(root, "0")
     dcam_var = StringVar(root, "0")
     throt_var = IntVar(root, 70)
+    # Variables used to read Drones Speed and Accleration
+    speed_var = IntVar(root, 0)
+    accle_var = IntVar(root, 0)
 
 
-    start.buttons(cont_var,throt_var, lmain, root, dcam_var, tello) 
+    start.buttons(cont_var,throt_var, lmain, root, dcam_var, tello, speed_var, accle_var) 
 
 
     xbox_flag = False
@@ -64,9 +67,15 @@ if __name__ == "__main__":
     throttle_comp = 0
     print("starting loop")
     helper = 0
+    countdown = 0
     while True:
         if root.state() != 'normal':        # Forcefully closes everything, calls Attribute and Traceback Errors
             start.total_annihilation(dcam_var, tello,  root)
+
+        if countdown == 20:
+            speed_var.set(start.get_drone_speed(tello))
+            accle_var.set(start.get_total_accle(tello))
+            countdown = 0
 
         if cam_state == True:               # If the cam has been enabled hand tracking will also start, not sure if this can be implemented to only start if enabled in the GUI
             start.Cam(lmain, cap)    #type: ignore
@@ -125,6 +134,7 @@ if __name__ == "__main__":
             start.drone_stream(tello)
 
         root.update()                       # Updates the UI, alternativ to mainloop
+        countdown += 1
         sleep(1/60)
 
 

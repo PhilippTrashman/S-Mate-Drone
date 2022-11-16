@@ -292,6 +292,18 @@ class GUI_mate():
         else:
             z_accle = int(z_accle)
             return z_accle
+    
+    def get_drone_speed(self, tello:Tello) -> int:
+        x_speed = tello.get_speed_x()
+        y_speed = tello.get_speed_y()
+        z_speed = tello.get_speed_z()
+
+        if x_speed >= y_speed and z_speed:
+            return x_speed
+        elif y_speed >= x_speed and z_speed:
+            return y_speed
+        else:
+            return z_speed
 
     def Cam(self, label: Label, capture):    # Replaced by the new HandDetection class
         """Older version of the Hand Tracking developed by Calvin (and Google), label = placement as a label widget, cap = camera """
@@ -316,7 +328,7 @@ class GUI_mate():
 
         root.destroy()
 
-    def buttons(self, v: StringVar,throt: IntVar, web_label: Label,window: Tk, drone_state: StringVar, tello):
+    def buttons(self, v: StringVar,throt: IntVar, web_label: Label,window: Tk, drone_state: StringVar, tello, speed_var: IntVar, accle_var : IntVar):
         """Buttons used by the main Window, v is a variable used to controll the actions taken by the menu, label is for the Hand Tracking Camera and window is the... well window"""
         drone = drone_state.get()
         colour_lib = {"light bluish Grey":"#D6E0EF", "light Grey" : "#ededed", 'grey 16':'#292929'}
@@ -351,8 +363,8 @@ class GUI_mate():
         # Different Scales used to visualize Drone speed and Throttle controll
         throt_sca = Scale(window, from_=100, to = 1, sliderlength = 50, length= 400, width= 25, variable = throt, bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929')
 
-        accel_sca = Scale(window, from_=10, to = 100, sliderlength = 50, length= 250, width= 25, orient='horizontal', bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929', showvalue= False)
-        speed_sca = Scale(window, from_=10, to = 100, sliderlength = 50, length= 250, width= 25, orient='horizontal', bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929', showvalue= False)
+        accel_sca = Scale(window, from_=0, to = 100, sliderlength = 50, length= 250, width= 25, variable= accle_var ,orient='horizontal', bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929')
+        speed_sca = Scale(window, from_=0, to = 100, sliderlength = 50, length= 250, width= 25,variable= speed_var ,orient='horizontal', bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929')
         # Placing everything
         xbox_btn.pack(side='bottom', in_= l_btn_frame)
         xbox_classic.pack(side='bottom', in_= l_btn_frame)
