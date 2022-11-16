@@ -299,128 +299,123 @@ device_specs = {
 supported_devices = list(device_specs.keys())
 _active_device = None
 
-
-def close():
-    """Close the active device, if it exists"""
-    if _active_device is not None:
-        _active_device.close()
-
-
-def read():
-    """Return the current state of the active navigation controller.
-    
-    Returns:
-        state: {t,x,y,z,pitch,yaw,roll,button} namedtuple
-        None if the device is not open.
-    """
-    if _active_device is not None:
-        return _active_device.tuple_state
-    else:
-        return None
+class Space_call():
+    def close(self):
+        """Close the active device, if it exists"""
+        if _active_device is not None:
+            _active_device.close()
 
 
-def list_devices():
-    """Return a list of the supported devices connected  
-    
-    Returns:
-        A list of string names of the devices supported which were found. Empty if no supported devices found
-    """
-    devices = []
-    all_hids = hid.find_all_hid_devices()
-    if all_hids:
-        for index, device in enumerate(all_hids):
-            for device_name, spec in device_specs.items():
-                if (
-                    device.vendor_id == spec.hid_id[0]
-                    and device.product_id == spec.hid_id[1]
-                ):
-                    devices.append(device_name)
-    return devices
+    def read(self):
+        """Return the current state of the active navigation controller.
 
-
-def open(callback=None, button_callback=None, device=None):
-    """
-    Open a 3D space navigator device. Makes this device the current active device, which enables the module-level read() and close()
-    calls. For multiple devices, use the read() and close() calls on the returned object instead, and don't use the module-level calls.
-    
-    Parameters:        
-        callback: If callback is provided, it is called on each HID update with a copy of the current state namedtuple  
-        button_callback: If button_callback is provided, it is called on each button push, with the arguments (state_tuple, button_state) 
-        device: name of device to open. Must be one of the values in supported_devices. If None, chooses the first supported device found.
-    Returns:
-        Device object if the device was opened successfully
-        None if the device could not be opened
-    """
-    # only used if the module-level functions are used
-    global _active_device
-
-    # if no device name specified, look for any matching device and choose the first
-    if device == None:
-        all_devices = list_devices()
-        if len(all_devices) > 0:
-            device = all_devices[0]
+        Returns:
+            state: {t,x,y,z,pitch,yaw,roll,button} namedtuple
+            None if the device is not open.
+        """
+        if _active_device is not None:
+            return _active_device.tuple_state
         else:
             return None
 
-    all_hids = hid.find_all_hid_devices()
-    if all_hids:
-        for index, dev in enumerate(all_hids):
-            spec = device_specs[device]
-            if dev.vendor_id == spec.hid_id[0] and dev.product_id == spec.hid_id[1]:
-                print("%s found" % device)
-                # create a copy of the device specification
-                new_device = copy.deepcopy(spec)
-                new_device.device = dev
 
-                # set the callbacks
-                new_device.callback = callback
-                new_device.button_callback = button_callback
-                # open the device and set the data handler
-                new_device.open()
-                dev.set_raw_data_handler(lambda x: new_device.process(x))
-                _active_device = new_device
-                return new_device
-        print("No supported devices found")
-        return None
-    else:
-        print("No HID devices detected")
-        return None
+    def list_devices(self):
+        """Return a list of the supported devices connected  
+
+        Returns:
+            A list of string names of the devices supported which were found. Empty if no supported devices found
+        """
+        devices = []
+        all_hids = hid.find_all_hid_devices()
+        if all_hids:
+            for index, device in enumerate(all_hids):
+                for device_name, spec in device_specs.items():
+                    if (
+                        device.vendor_id == spec.hid_id[0]
+                        and device.product_id == spec.hid_id[1]
+                    ):
+                        devices.append(device_name)
+        return devices
 
 
-def print_state(state):
-    # simple default printer callback
-    if state:
-        print(
-            " ".join(
-                [
-                    "%4s %+.2f" % (k, getattr(state, k))
-                    for k in ["x", "y", "z", "roll", "pitch", "yaw", "t"]
-                ]
+    def open(self, callback=None, button_callback=None, device=None):
+        """
+        Open a 3D space navigator device. Makes this device the current active device, which enables the module-level read() and close()
+        calls. For multiple devices, use the read() and close() calls on the returned object instead, and don't use the module-level calls.
+
+        Parameters:        
+            callback: If callback is provided, it is called on each HID update with a copy of the current state namedtuple  
+            button_callback: If button_callback is provided, it is called on each button push, with the arguments (state_tuple, button_state) 
+            device: name of device to open. Must be one of the values in supported_devices. If None, chooses the first supported device found.
+        Returns:
+            Device object if the device was opened successfully
+            None if the device could not be opened
+        """
+        # only used if the module-level functions are used
+        global _active_device
+
+        # if no device name specified, look for any matching device and choose the first
+        if device == None:
+            all_devices = self.list_devices()
+            if len(all_devices) > 0:
+                device = all_devices[0]
+            else:
+                return None
+
+        all_hids = hid.find_all_hid_devices()
+        if all_hids:
+            for index, dev in enumerate(all_hids):
+                spec = device_specs[device]
+                if dev.vendor_id == spec.hid_id[0] and dev.product_id == spec.hid_id[1]:
+                    print("%s found" % device)
+                    # create a copy of the device specification
+                    new_device = copy.deepcopy(spec)
+                    new_device.device = dev
+
+                    # set the callbacks
+                    new_device.callback = callback
+                    new_device.button_callback = button_callback
+                    # open the device and set the data handler
+                    new_device.open()
+                    dev.set_raw_data_handler(lambda x: new_device.process(x))
+                    _active_device = new_device
+                    return new_device
+            print("No supported devices found")
+            return None
+        else:
+            print("No HID devices detected")
+            return None
+
+
+    def print_state(self, state):
+        # simple default printer callback
+        if state:
+            print(
+                " ".join(
+                    [
+                        "%4s %+.2f" % (k, getattr(state, k))
+                        for k in ["x", "y", "z", "roll", "pitch", "yaw", "t"]
+                    ]
+                )
             )
-        )
 
 
-def toggle_led(state, buttons):
-    print("".join(["buttons=", str(buttons)]))
-    # Switch on the led on left push, off on right push
-    if buttons[0] == 1:
-        set_led(1)
-    if buttons[1] == 1:
-        set_led(0)
+    def toggle_led(self, state, buttons):
+        print("".join(["buttons=", str(buttons)]))
+        # Switch on the led on left push, off on right push
+        if buttons[0] == 1:
+            self.set_led(1)
+        if buttons[1] == 1:
+            self.set_led(0)
 
 
-def set_led(state):
-    if _active_device:
-        _active_device.set_led(state)
+    def set_led(self, state):
+        if _active_device:
+            _active_device.set_led(state)
 
 
-def flight():
-    while True:
-        tello = Tello()
-        tello.connect()
-        battery = tello.get_battery()
-        battery_temperature = tello.get_temperature()
-        a = read()
+    def flight(self, tello, help):
+        a = self.read()
         print(a)
         sleep(0.1)
         if a[7][1] == 1 and a[7][0] == 1:
@@ -433,36 +428,6 @@ def flight():
             print("Takeoff")
         elif a[7][1] == 1 and help != 0:
             tello.land()
-            break
         elif a[7][0] == 1 and help != 0:
             tello.flip("r")
         tello.send_rc_control(int(a[4]*100), int(a[5]*100), int(a[3]*100), int(a[6]*100))
-
-# if __name__ == "__main__":
-
-
-
-
-#     button_list = []
-#     button1 = "Video"
-#     button2 = "Just flying"
-#     button_list.append(button1)
-#     button_list.append(button2)
-
-#     output = easygui.buttonbox(f"The current battery percentage is {battery}%!\nPressing 'Ok' is starting the Live Video Feed", "Info", button_list)
-    
-#     if output == "Video":
-#         tello.streamon()
-#         tello.set_video_resolution(Tello.RESOLUTION_720P)
-#         tello.set_video_fps(Tello.FPS_30)
-    
-#     print("Devices found:\n\t%s" % "\n\t".join(list_devices()))
-#     dev = open(callback=None, button_callback=toggle_led)
-#     help = 0
-
-        
-#     flight_time = tello.get_flight_time()
-#     easygui.msgbox(f"Total flight time was: {flight_time} seconds", title="Info-")
-        
-#     flight_time = tello.get_flight_time()
-#     easygui.msgbox(f"Total flight time was: {flight_time} seconds", title="Info-")
