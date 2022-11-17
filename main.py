@@ -49,7 +49,9 @@ class XboxController(object):
 
 
     def read(self):
-        """returns the Xbox Controller Inputs, can be called to check if the controller works, but shouldnt get called
+        """returns the Xbox Controller Inputs, can be called to check if the controller works, but shouldnt get called \n
+        left Stick  y = 0, x = 1 | right Stick = y/2, x/3 | A = 4 | X = 5| Y = 6 | B = 7| Dpad x = 8, y = 9 | RB = 10 | RT = 11 |
+        LB = 10 | LT = 13 | start = 14 | select = 15| RT - LT = 16 |        
         """
         left_y = self.LeftJoystickX
         left_x = self.LeftJoystickY
@@ -75,6 +77,8 @@ class XboxController(object):
 
         # Extra for spacenavigator to controll lift
         extra = self.RightTrigger - self.LeftTrigger
+        # left Stick  y = 0, x = 1 | right Stick = y/2, x/3 | A = 4 | X = 5| Y = 6 | B = 7| Dpad x = 8, y = 9 | RB = 10 | RT = 11 |
+        # LB = 12 | LT = 13 | start = 14 | select = 15| RT - LT = 16 |
         return [left_y, left_x, right_y, right_x, a, x, y, b, Dpad_x, Dpad_y, rb, rt, lb, lt, start, select, extra]
 
 
@@ -129,7 +133,7 @@ class XboxController(object):
                 elif event.code == 'ABS_HAT0Y':
                     self.DPadY = event.state
 
-    def flight_xbox(self, tello, helper, speed: int):
+    def flight_xbox(self, tello: Tello, helper, speed: int, cam_direction: int):
         """Used as the main Controll function for the drone, needs more jokes, uses the GTA Controll Setup
         returnes Helper for Landing, Left/right, back/forth, up/down, yaw"""
         cont = self
@@ -138,27 +142,73 @@ class XboxController(object):
         if cont.read()[14] == 1:
             easygui.msgbox("Press 'Ok' to engage throw takeoff",title="Info")
             tello.initiate_throw_takeoff()
-            helper += 1
-        elif cont.read()[15] == 1 and helper == 0:
-            tello.takeoff()
-            helper += 1
-            print("Takeoff")
-        elif cont.read()[15] == 1 and helper != 0:
-            tello.land()
-            helper -= 1
-            print("landing")
-        elif cont.read()[9] == 1:
-            tello.flip("b")
-        elif cont.read()[8] == -1:
-            tello.flip("l")
-        elif cont.read()[9] == -1:
-            tello.flip("f")
-        elif cont.read()[8] == 1:
-            tello.flip("r")
+            helper = 1
+
+        elif cont.read()[15] == 1 and helper == 0:  # Takeoff
+            try:
+                tello.takeoff()
+                helper = 1
+                print("Takeoff")
+            except:
+                pass
+
+        elif cont.read()[15] == 1 and helper != 0:  # Landing
+            try:
+                tello.land()
+                helper = 0
+                print("landing")
+            except:
+                pass
+
+        elif cont.read()[9] == 1:   # Backwards Flip
+            try:
+                tello.flip("b")
+            except:
+                pass
+
+        elif cont.read()[8] == -1:  # Left Flip
+            try:
+                tello.flip("l")
+            except:
+                pass
+
+        elif cont.read()[9] == -1:  # Forward Flip
+            try:
+                tello.flip("f")
+            except:
+                pass
+
+        elif cont.read()[8] == 1:   # Right Flip
+            try:
+                tello.flip("r")
+            except:
+                pass
+
+        elif cont.read()[10] == 1 and cont.read()[5] == 1:  # Enters "Funni mode", shuts down the Motors
+            try:
+                helper = 0
+                tello.emergency()
+            except:
+                pass
+
+        elif cont.read()[7] == 1:       #Video Direction
+            if cam_direction == 0:
+                try:
+                    tello.set_video_direction(0)
+                    cam_direction = 1
+                except:
+                    pass
+            elif cam_direction == 1:
+                try:
+                    tello.set_video_direction(1)
+                    cam_direction = 0
+                except:
+                    pass
+
         tello.send_rc_control(int(cont.read()[0]*speed), int(cont.read()[1]*speed), int(cont.read()[16]*speed), int(cont.read()[3]*100))
-        return helper
+        return helper, cam_direction
         
-    def flight_xbox_classic(self, tello, helper: int, speed :int):
+    def flight_xbox_classic(self, tello: Tello, helper: int, speed :int, cam_direction: int):
         """More Classic Drone Controll, as requested
         returnes Helper for Landing, Left/right, back/forth, up/down, yaw"""
         cont = self
@@ -167,26 +217,72 @@ class XboxController(object):
         if cont.read()[14] == 1:
             easygui.msgbox("Press 'Ok' to engage throw takeoff",title="Info")
             tello.initiate_throw_takeoff()
-            helper += 1
+            helper = 1
+
         elif cont.read()[15] == 1 and helper == 0:
-            tello.takeoff()
-            helper += 1
-            print("Takeoff")
+            try:
+                tello.takeoff()
+                helper = 1
+                print("Takeoff")
+            except:
+                pass
+
         elif cont.read()[15] == 1 and helper != 0:
-            tello.land()
-            helper -= 1
-            print("landing")
+            try:
+                tello.land()
+                helper = 0
+                print("landing")
+            except:
+                pass
+
         elif cont.read()[9] == 1:
-            tello.flip("b")
+            try:
+                tello.flip("b")
+            except:
+                pass
+
         elif cont.read()[8] == -1:
-            tello.flip("l")
+            try:
+                tello.flip("l")
+            except:
+                pass
+
         elif cont.read()[9] == -1:
-            tello.flip("f")
+            try:
+                tello.flip("f")
+            except:
+                pass
+
         elif cont.read()[8] == 1:
-            tello.flip("r")
+            try:
+                tello.flip("r")
+            except:
+                pass
+
+        elif cont.read()[10] == 1 and cont.read()[5] == 1:  # Enters "Funni mode", shuts down the Motors
+            try:
+                helper = 0
+                tello.emergency()
+            except:
+                pass
+
+        elif cont.read()[7] == 1:       #Video Direction
+            if cam_direction == 0:
+                try:
+                    tello.set_video_direction(0)
+                    cam_direction = 1
+                except:
+                    pass
+            elif cam_direction == 1:
+                try:
+                    tello.set_video_direction(1)
+                    cam_direction = 0
+                except:
+                    pass
+
         # send_rec_control configuration is left/right, back/forth, up/down, yaw
         tello.send_rc_control(int(cont.read()[3]*speed), int(cont.read()[2]*speed), int(cont.read()[1]*speed), int(cont.read()[0]*100))
-        return helper
+        return helper, cam_direction
 
     def define_speed_xbox(self, current_speed) -> int:
         """For Xbox controll mode!, Returns a value to reduce or increase drone speed for controllers in increments of 5"""
@@ -285,15 +381,15 @@ class GUI_mate():
         z_accle = tello.get_acceleration_z()
 
         if x_accle >= y_accle and z_accle:
-            x_accle = int(x_accle*100)
+            x_accle = int(x_accle)
             return x_accle
 
         elif y_accle >= x_accle and z_accle:
-            y_accle = int(y_accle*100)
+            y_accle = int(y_accle)
             return y_accle
         
         else:
-            z_accle = int(z_accle*100)
+            z_accle = int(z_accle)
             return z_accle
     
     def get_drone_speed(self, tello:Tello,) -> int:
@@ -320,18 +416,23 @@ class GUI_mate():
         lmain.imgtk = imgtk # type: ignore
         lmain.configure(image=imgtk)
     
-    def drone_stream(self, tello: Tello):
+    def drone_stream(self, tello: Tello, cam_direction: int):
         """simple drone video Feed"""
         frame = tello.get_frame_read().frame
+        frame = cv2.resize(frame, (960, 720))
+
         cv2.imshow("stream", frame)
 
     def total_annihilation(self, drone_state, tello: Tello, root:Tk):
         """Just used for the Exit button to actually close all the windows""" 
+        try:
+            tello.end()
+        except:
+            pass
         cv2.destroyAllWindows()
-
         root.destroy()
 
-    def buttons(self, v: StringVar,throt: IntVar, web_label: Label,window: Tk, drone_state: StringVar, tello, speed_var: IntVar, accle_var : IntVar, face_distance_var: IntVar):
+    def buttons(self, v: StringVar,throt: IntVar, web_label: Label,window: Tk, drone_state: StringVar, tello, speed_var: IntVar, accle_var : IntVar, face_distance_var: IntVar, battery_var : IntVar):
         """Buttons used by the main Window, v is a variable used to controll the actions taken by the menu, label is for the Hand Tracking Camera and window is the... well window"""
         drone = drone_state.get()
         colour_lib = {"light bluish Grey":"#D6E0EF", "light Grey" : "#ededed", 'grey 16':'#292929'}
@@ -340,8 +441,17 @@ class GUI_mate():
 
         root = window
         # Frames for the Placements of the widgets
-        l_btn_frame = Frame(window, background= "#292929", width= 30, padx=5)
-        l_btn_frame.pack(side='left', fill=Y)
+        l_frame = Frame(window, background= "#292929", width= 30, padx=5, height=40)
+        l_frame.pack(side='left')
+
+        l_up_btn_frame = Frame(window, background= "#292929", width= 30, padx=5, height=40)
+        l_up_btn_frame.pack(side='top', in_=l_frame)
+
+        l_lower_btn_frame = Frame(window, background= "#292929", width= 30, padx=5, height=40)
+        l_lower_btn_frame.pack(side='bottom', in_=l_frame)
+        
+        # l2_btn_frame = Frame(window, background= "#292929", width= 15, padx=5)
+        # l2_btn_frame.pack(side='bottom', in_=l_frame)
 
         r_btn_frame = Frame(window, background= "#292929", width= 30, padx=5)
         r_btn_frame.pack(side='right', fill=Y)
@@ -349,6 +459,11 @@ class GUI_mate():
         low_scale_frame = Frame(window, background= "#292929", height= 100, pady= 5)
         low_scale_frame.pack(side='bottom', fill= X)
 
+        # Shows battery percentage
+        bat_text = f'current Battery: {battery_var}%'
+        battery_label = Label(root, textvariable=battery_var, background="#D6E0EF",activebackground= "white")
+
+        empty_label = Label(root, background="#ededed")
         # Radiobuttons used to switch between controll modes, still not very pretty...
         xbox_btn = Radiobutton(root, text = "Xbox", variable = v, value = "1", indicator = 0, background = "#D6E0EF", height=1, width= 15)   # type: ignore
         xbox_classic = Radiobutton(root, text = "Classic", variable = v, value = "5", indicator = 0, background = "#D6E0EF", height=1, width= 15)   # type: ignore
@@ -371,22 +486,27 @@ class GUI_mate():
         
         face_distance_sca = Scale(window, from_=70, to = 10, sliderlength = 50, length= 250, width= 25,variable= face_distance_var , bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929')
         # Placing everything
-        xbox_btn.pack(side='bottom', in_= l_btn_frame)
-        xbox_classic.pack(side='bottom', in_= l_btn_frame)
-        space_btn.pack(side='bottom', in_= l_btn_frame)
-        face_btn.pack(side='bottom', in_= l_btn_frame)
-        gest_btn.pack(side='bottom', in_= l_btn_frame)
+        battery_label.grid(column=0,columnspan=2,row=0, in_=l_up_btn_frame)
+        btn_con.grid(column=0, row=1, in_ = l_up_btn_frame)
+        streamon_btn.grid(column=0, row=3, in_ = l_up_btn_frame, sticky=E)
+        streamoff_btn.grid(column=1, row=3, in_ = l_up_btn_frame, sticky=W)
 
-        btn_con.pack(side='top', anchor=W, in_ = l_btn_frame)
-        streamon_btn.pack(side='left', in_ = l_btn_frame)
-        streamoff_btn.pack(side='left', in_ = l_btn_frame)
+        # empty_label.grid(columnspan=2, column=0, rowspan=4, row=4, in_ = l_btn_frame)
+
+        gest_btn.grid(column=0, row=6, in_= l_lower_btn_frame)
+        face_btn.grid(column=0, row=7, in_= l_lower_btn_frame)
+        space_btn.grid(column=0, row=8, in_= l_lower_btn_frame)
+        xbox_classic.grid(column=0, row=9, in_= l_lower_btn_frame)
+        xbox_btn.grid(column=0, row=10, in_= l_lower_btn_frame)
+
+
 
         btn_exit.pack(side='bottom', in_= r_btn_frame)
 
         throt_sca.pack(anchor=CENTER,side="right", in_ = r_btn_frame)
         accel_sca.pack(side='bottom', anchor=CENTER, in_= low_scale_frame)
         speed_sca.pack(side='bottom', anchor=CENTER, in_= low_scale_frame)
-        face_distance_sca.pack(side='right', in_= l_btn_frame)
+        face_distance_sca.pack(side='right', in_= l_frame)
 
         lmain.pack()
 

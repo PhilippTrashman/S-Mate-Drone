@@ -1,5 +1,5 @@
 from time import sleep
-
+from tkinter import messagebox
 from main import *
 
 if __name__ == "__main__":
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     # Testing case to enable and disable the cameras
     cam_state = False
 
-    drone_state = True
+    drone_state = False
     d_cam_state = True
 
     # Starting the Window
@@ -46,20 +46,25 @@ if __name__ == "__main__":
             tello.streamoff()
             tello.streamon()
             print("Stream turned on")
+            
 
             face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
-
+    cam_direction = 0
     cont_var = StringVar(root, "0")
     dcam_var = StringVar(root, "0")
     throt_var = IntVar(root, 70)
     # Variables used to read Drones Speed and Accleration
     speed_var = IntVar(root, 0)
     accle_var = IntVar(root, 0)
+    battery_var = IntVar(root, 0)
+    barometer_var = IntVar(root, 0)
+    height_var = IntVar(root, 0)
+
     face_distance_var = IntVar(root, 20)
 
 
-    start.buttons(cont_var,throt_var, lmain, root, dcam_var, tello, speed_var, accle_var, face_distance_var) 
+    start.buttons(cont_var,throt_var, lmain, root, dcam_var, tello, speed_var, accle_var, face_distance_var, battery_var) 
 
 
     xbox_flag = False
@@ -73,9 +78,10 @@ if __name__ == "__main__":
         if root.state() != 'normal':        # Forcefully closes everything, calls Attribute and Traceback Errors
             start.total_annihilation(dcam_var, tello,  root)
 
-        if countdown == 20:
+        if countdown == 10 and drone_state == True:
             speed_var.set(start.get_drone_speed(tello))
             accle_var.set(start.get_total_accle(tello))
+            battery_var.set(tello.get_battery())
             countdown = 0
 
         if cam_state == True:               # If the cam has been enabled hand tracking will also start, not sure if this can be implemented to only start if enabled in the GUI
@@ -87,17 +93,28 @@ if __name__ == "__main__":
         distance = face_distance_var.get()
         
         if controller == "1":               # Xbox Controll Mode with GTA Config
-            speed = joy.define_speed_xbox(speed)
-            throt_var.set(speed)
-            helper = joy.flight_xbox(tello, helper, speed)          
+            try:
+                speed = joy.define_speed_xbox(speed)
+                throt_var.set(speed)
+                if drone_state == True:
+                    helper, cam_direction = joy.flight_xbox(tello, helper, speed, cam_direction)   
+
+            except:
+                cont_var.set("0")
+                print("couldnt send command")
+                messagebox.showerror(title="Controller Error", message="Couldnt Procced with controll Method \nCheck if your Xbox Controller is properly connected")    
             
         elif controller == "2":             # Space Mouse, not yet tested
-            if space_flag == False:
-                dev = space.open(callback=None, button_callback=space.toggle_led)
-                space_flag = True
+            try:
+                if space_flag == False:
+                    dev = space.open(callback=None, button_callback=space.toggle_led)
+                    space_flag = True
 
-            elif space_flag == True:
-                space.flight(tello, help)
+                elif space_flag == True:
+                    space.flight(tello, help)
+            except:
+                cont_var.set("0")
+                messagebox.showerror(title="Spacemouse Error", message="Couldnt Procced with controll Method \nCheck if your Spacemouse is properly connected")
 
         elif controller == "3":             # Face Tracking
             if drone_state == False:
@@ -114,6 +131,7 @@ if __name__ == "__main__":
             
             else:
                 face.tk_facetrack(tello, distance, face_cascade)  #type: ignore
+                cv2.destroyWindow("stream")
 
         elif controller == "4":             # Gesture Tracking
             if cam_state == True:
@@ -130,10 +148,13 @@ if __name__ == "__main__":
         elif controller == "5":             # Xbox Controller with more classic Drone Controll
             speed = joy.define_speed_classic(speed)
             throt_var.set(speed)
-            helper = joy.flight_xbox_classic(tello, helper, speed)
+            if drone_state == True:
+                helper, cam_direction = joy.flight_xbox_classic(tello, helper, speed, cam_direction)
+
                 
         if cam_stream == "1":               # Drone Stream
-            start.drone_stream(tello)
+            start.drone_stream(tello, cam_direction)
+
 
         root.update()                       # Updates the UI, alternativ to mainloop
         countdown += 1
