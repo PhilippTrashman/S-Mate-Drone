@@ -56,9 +56,10 @@ if __name__ == "__main__":
     # Variables used to read Drones Speed and Accleration
     speed_var = IntVar(root, 0)
     accle_var = IntVar(root, 0)
+    face_distance_var = IntVar(root, 20)
 
 
-    start.buttons(cont_var,throt_var, lmain, root, dcam_var, tello, speed_var, accle_var) 
+    start.buttons(cont_var,throt_var, lmain, root, dcam_var, tello, speed_var, accle_var, face_distance_var) 
 
 
     xbox_flag = False
@@ -83,11 +84,12 @@ if __name__ == "__main__":
         cam_stream = dcam_var.get()
         controller = cont_var.get()
         speed = throt_var.get()
+        distance = face_distance_var.get()
         
         if controller == "1":               # Xbox Controll Mode with GTA Config
             speed = joy.define_speed_xbox(speed)
             throt_var.set(speed)
-            helper = joy.flight_xbox(tello, helper, speed)
+            helper = joy.flight_xbox(tello, helper, speed)          
             
         elif controller == "2":             # Space Mouse, not yet tested
             if space_flag == False:
@@ -111,7 +113,7 @@ if __name__ == "__main__":
                 drone_state = True
             
             else:
-                face.tk_facetrack(tello, 20, face_cascade)  #type: ignore
+                face.tk_facetrack(tello, distance, face_cascade)  #type: ignore
 
         elif controller == "4":             # Gesture Tracking
             if cam_state == True:

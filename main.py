@@ -130,7 +130,8 @@ class XboxController(object):
                     self.DPadY = event.state
 
     def flight_xbox(self, tello, helper, speed: int):
-        """Used as the main Controll function for the drone, needs more jokes, uses the GTA Controll Setup"""
+        """Used as the main Controll function for the drone, needs more jokes, uses the GTA Controll Setup
+        returnes Helper for Landing, Left/right, back/forth, up/down, yaw"""
         cont = self
 
         # print(cont.read())
@@ -158,7 +159,8 @@ class XboxController(object):
         return helper
         
     def flight_xbox_classic(self, tello, helper: int, speed :int):
-        """More Classic Drone Controll, as requested"""
+        """More Classic Drone Controll, as requested
+        returnes Helper for Landing, Left/right, back/forth, up/down, yaw"""
         cont = self
 
         # print(cont.read())
@@ -182,6 +184,7 @@ class XboxController(object):
             tello.flip("f")
         elif cont.read()[8] == 1:
             tello.flip("r")
+        # send_rec_control configuration is left/right, back/forth, up/down, yaw
         tello.send_rc_control(int(cont.read()[3]*speed), int(cont.read()[2]*speed), int(cont.read()[1]*speed), int(cont.read()[0]*100))
         return helper
 
@@ -282,18 +285,18 @@ class GUI_mate():
         z_accle = tello.get_acceleration_z()
 
         if x_accle >= y_accle and z_accle:
-            x_accle = int(x_accle)
+            x_accle = int(x_accle*100)
             return x_accle
 
         elif y_accle >= x_accle and z_accle:
-            y_accle = int(y_accle)
+            y_accle = int(y_accle*100)
             return y_accle
         
         else:
-            z_accle = int(z_accle)
+            z_accle = int(z_accle*100)
             return z_accle
     
-    def get_drone_speed(self, tello:Tello) -> int:
+    def get_drone_speed(self, tello:Tello,) -> int:
         x_speed = tello.get_speed_x()
         y_speed = tello.get_speed_y()
         z_speed = tello.get_speed_z()
@@ -328,7 +331,7 @@ class GUI_mate():
 
         root.destroy()
 
-    def buttons(self, v: StringVar,throt: IntVar, web_label: Label,window: Tk, drone_state: StringVar, tello, speed_var: IntVar, accle_var : IntVar):
+    def buttons(self, v: StringVar,throt: IntVar, web_label: Label,window: Tk, drone_state: StringVar, tello, speed_var: IntVar, accle_var : IntVar, face_distance_var: IntVar):
         """Buttons used by the main Window, v is a variable used to controll the actions taken by the menu, label is for the Hand Tracking Camera and window is the... well window"""
         drone = drone_state.get()
         colour_lib = {"light bluish Grey":"#D6E0EF", "light Grey" : "#ededed", 'grey 16':'#292929'}
@@ -365,6 +368,8 @@ class GUI_mate():
 
         accel_sca = Scale(window, from_=0, to = 100, sliderlength = 50, length= 250, width= 25, variable= accle_var ,orient='horizontal', bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929')
         speed_sca = Scale(window, from_=0, to = 100, sliderlength = 50, length= 250, width= 25,variable= speed_var ,orient='horizontal', bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929')
+        
+        face_distance_sca = Scale(window, from_=70, to = 10, sliderlength = 50, length= 250, width= 25,variable= face_distance_var , bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929')
         # Placing everything
         xbox_btn.pack(side='bottom', in_= l_btn_frame)
         xbox_classic.pack(side='bottom', in_= l_btn_frame)
@@ -381,6 +386,7 @@ class GUI_mate():
         throt_sca.pack(anchor=CENTER,side="right", in_ = r_btn_frame)
         accel_sca.pack(side='bottom', anchor=CENTER, in_= low_scale_frame)
         speed_sca.pack(side='bottom', anchor=CENTER, in_= low_scale_frame)
+        face_distance_sca.pack(side='right', in_= l_btn_frame)
 
         lmain.pack()
 
@@ -497,41 +503,31 @@ class FaceTracking():
     def controlling(self, tello, faces, distance):
         width_middle = 300
         height_middle = 200
+        face_reference = 80 - distance
 
         #yaw Abfrage
-        if (faces[0][0]-width_middle)/4 > 100:
-            controll_yaw = 100
-        elif (faces[0][0]-width_middle)/4 < -100:
-            controll_yaw = -100
-        else:
-            controll_yaw = int((faces[0][0]-width_middle)/4)
+        controll_yaw = (faces[0][0]/width_middle)*100
+        controll_yaw -= 100
+        controll_yaw = round(controll_yaw)
+        if controll_yaw <= 5 and controll_yaw >= -5:
+            controll_yaw = 0
 
         #Height Abfrage
-        if (height_middle-faces[0][1])/3 > 100:
-            controll_updown = 100
-        elif (height_middle-faces[0][1])/3 < -100:
-            controll_updown = -100
-        else:
-            controll_updown = int((height_middle-faces[0][1])/3)
+        controll_updown = (height_middle/faces[0][1])*100
+        controll_updown -= 100
+        controll_updown = round(controll_updown)
+        if controll_updown >= 50:
+            controll_updown = 50
+        elif controll_updown <= -50:
+            controll_updown = -50
 
-        #Offset Abfrage
-        if distance > 7:
-            offset = 15
-        else:
-            offset = 5
-
-        #Front Back Abfrage
-        if faces[0][2] > (distance*10+offset):
-            controll_frontback = -15
-        elif faces[0][2] < (distance*10+offset) and faces[0][2] > (distance*10):
-            controll_frontback = 0
-        elif faces[0][2] < (distance*10):
-            controll_frontback = 15
-        else:
-            controll_frontback = 0
+        #front back Abfrage
+        controll_frontback = (face_reference/faces[0][2])*100
+        controll_frontback -= 100
+        controll_frontback = round(controll_frontback)
 
         #Zusammenführung der Signale
-        tello.send_rc_control(0, controll_frontback, controll_updown, controll_yaw)     
+        tello.send_rc_control(0, controll_frontback, controll_updown, controll_yaw)    
 
     def face_track_fly(self, tello: Tello, distance: int):
         face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
