@@ -1,6 +1,7 @@
 from time import sleep
 from tkinter import messagebox
 from main import *
+import threading
 
 if __name__ == "__main__":
 
@@ -21,7 +22,7 @@ if __name__ == "__main__":
     cam_state = False
     cam_finger_track = False
 
-    drone_state = False
+    drone_state = True
     d_cam_state = True
 
     # Starting the Window
@@ -56,7 +57,7 @@ if __name__ == "__main__":
     throt_var = IntVar(root, 70)
     # Variables used to read Drones Speed and Accleration
     speed_var = IntVar(root, 0)
-    accle_var = IntVar(root, 0)
+
 
     battery_var =    StringVar(root, f'Battery:     {0}%')
     height_var =     StringVar(root, f'Height:      {0} cm')
@@ -67,7 +68,7 @@ if __name__ == "__main__":
     face_distance_var = IntVar(root, 20)
 
 
-    start.buttons(cont_var,throt_var, lmain, root, dcam_var, tello, speed_var, accle_var, face_distance_var, battery_var,
+    start.buttons(cont_var,throt_var, lmain, root, dcam_var, tello, speed_var, face_distance_var, battery_var,
         height_var, time_var, temperatur_var, barometer_var) 
 
 
@@ -85,7 +86,7 @@ if __name__ == "__main__":
 
         if countdown == 10 and drone_state == True:
             speed_var.set(start.get_drone_speed(tello))
-            accle_var.set(start.get_total_accle(tello))
+
             time = tello.get_flight_time()
             if time >= 120:
                 
