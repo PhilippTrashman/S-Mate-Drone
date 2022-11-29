@@ -375,23 +375,6 @@ class GUI_mate():
         tello.set_speed(val)
         print(val)
 
-    def get_total_accle(self, tello: Tello) -> int:
-        x_accle = tello.get_acceleration_x()
-        y_accle = tello.get_acceleration_y()
-        z_accle = tello.get_acceleration_z()
-
-        if x_accle >= y_accle and x_accle >= z_accle:
-            x_accle = int(x_accle)
-            return x_accle
-
-        elif y_accle >= x_accle and y_accle >= z_accle:
-            y_accle = int(y_accle)
-            return y_accle
-        
-        else:
-            z_accle = int(z_accle)
-            return z_accle
-    
     def get_drone_speed(self, tello:Tello,) -> int:
         x_speed = tello.get_speed_x()
         y_speed = tello.get_speed_y()
@@ -433,7 +416,7 @@ class GUI_mate():
         root.destroy()
 
     def buttons(self, v: StringVar,throt: IntVar, web_label: Label,window: Tk, drone_state: StringVar,
-        tello, speed_var: IntVar,accle_var : IntVar, face_distance_var: IntVar, battery_var : StringVar,
+        tello, speed_var: IntVar, face_distance_var: IntVar, battery_var : StringVar,
         height_var: StringVar, time_var : StringVar, temperatur_var: StringVar, barometer_var: StringVar):
         """Alot of Variables are needed but for some reason dictionaries dont work with Tk variables, Buttons used by the main Window, v is a variable used to controll the actions taken by the menu, label is for the Hand Tracking Camera and window is the... well window"""
         drone = drone_state.get()
@@ -446,10 +429,10 @@ class GUI_mate():
         l_frame = Frame(window, background= "#292929", width= 30, padx=5, height=40)
         l_frame.pack(side='left',fill=Y)
 
-        l_up_btn_frame = Frame(window, background="#D6E0EF", width= 40, padx=5, height=40)
+        l_up_btn_frame = Frame(window, background="#D6E0EF", width= 40, padx=5, pady=5, height=40)
         l_up_btn_frame.pack(side='top', in_=l_frame)
 
-        l_lower_btn_frame = Frame(window, background="#D6E0EF", width= 120, padx=5, height=40)
+        l_lower_btn_frame = Frame(window, background="#D6E0EF", padx=35, pady=5, height=40)
         l_lower_btn_frame.pack(side='bottom', in_=l_frame)
         
         # l2_btn_frame = Frame(window, background= "#292929", width= 15, padx=5)
@@ -485,8 +468,8 @@ class GUI_mate():
         # Different Scales used to visualize Drone speed and Throttle controll
         throt_sca = Scale(window, from_=100, to = 1, sliderlength = 50, length= 400, width= 25, variable = throt, bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929', label="Throttle")
 
-        accel_sca = Scale(window, from_=0, to = 100, sliderlength = 25, length= 250, width= 25, variable= accle_var ,orient='horizontal', bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929', state='disabled', label="Acceleration")
-        speed_sca = Scale(window, from_=0, to = 100, sliderlength = 25, length= 250, width= 25,variable= speed_var ,orient='horizontal', bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929', state='disabled', label="Speed")
+    
+        speed_sca = Scale(window, from_=0, to = 20, sliderlength = 25, length= 300, width= 25,variable= speed_var ,orient='horizontal', bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929', state='disabled', label="Speed")
         
         face_distance_sca = Scale(window, from_=70, to = 10, sliderlength = 50, length= 250, width= 25,variable= face_distance_var , bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929')
         
@@ -517,7 +500,7 @@ class GUI_mate():
 
         # Scales for Stats and Adjustments
         throt_sca.pack(anchor=CENTER,side="right", in_ = r_btn_frame)
-        accel_sca.pack(side='bottom', anchor=CENTER, in_= low_scale_frame)
+
         speed_sca.pack(side='bottom', anchor=CENTER, in_= low_scale_frame)
 
         face_distance_sca.pack(side='right', in_= l_frame)
