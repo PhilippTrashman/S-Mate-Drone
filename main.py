@@ -401,6 +401,7 @@ class GUI_mate():
     
     def drone_stream(self, tello: Tello, cam_direction: int):
         """simple drone video Feed"""
+
         frame = tello.get_frame_read().frame
         frame = cv2.resize(frame, (960, 720))
 
@@ -415,9 +416,17 @@ class GUI_mate():
         cv2.destroyAllWindows()
         root.destroy()
 
+    def connection_try(self, tello:Tello):
+        try:
+            tello.connect()
+            tello.streamon()
+        except:
+            pass
+          
     def buttons(self, v: StringVar,throt: IntVar, web_label: Label,window: Tk, drone_state: StringVar,
-        tello, speed_var: IntVar, face_distance_var: IntVar, battery_var : StringVar,
-        height_var: StringVar, time_var : StringVar, temperatur_var: StringVar, barometer_var: StringVar):
+        tello: Tello, speed_var: IntVar, face_distance_var: IntVar, battery_var : StringVar,
+        height_var: StringVar, time_var : StringVar, temperatur_var: StringVar,
+        barometer_var: StringVar, drone_var: IntVar):
         """Alot of Variables are needed but for some reason dictionaries dont work with Tk variables, Buttons used by the main Window, v is a variable used to controll the actions taken by the menu, label is for the Hand Tracking Camera and window is the... well window"""
         drone = drone_state.get()
         colour_lib = {"light bluish Grey":"#D6E0EF", "light Grey" : "#ededed", 'grey 16':'#292929'}
@@ -462,9 +471,9 @@ class GUI_mate():
         streamon_btn = Radiobutton(root, text = "On", variable = drone_state, value = "1", indicator = 0, background = "#D6E0EF", height=1, width= 7)         #type: ignore
         streamoff_btn = Radiobutton(root, text = "Off", variable = drone_state, value = "0", indicator = 0, background = "#D6E0EF", height=1, width= 7)       #type: ignore
         # Different Buttons that are still unfinished
-        btn_con = Button(root, text="connect", width=15, height=2, background= '#D6E0EF')
         btn_exit = Button(root, text="Exit", width=10, height=2, background= "#58181F", command = lambda: self.total_annihilation(drone, tello,  root))
-
+        btn_con = Radiobutton(root, text = "On", variable = drone_var, value = 1, indicator = 0, background = "#D6E0EF", height=2, width= 15)
+        
         # Different Scales used to visualize Drone speed and Throttle controll
         throt_sca = Scale(window, from_=100, to = 1, sliderlength = 50, length= 400, width= 25, variable = throt, bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929', label="Throttle")
 

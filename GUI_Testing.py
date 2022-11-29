@@ -22,8 +22,8 @@ if __name__ == "__main__":
     cam_state = False
     cam_finger_track = False
 
-    drone_state = True
-    d_cam_state = True
+    drone_state = False
+
 
     # Starting the Window
 
@@ -40,24 +40,16 @@ if __name__ == "__main__":
 
     if drone_state == True:
         tello.connect()
-        
-        if d_cam_state == True:
-
-            print("turning the drone stream on...")
-            tello.streamoff()
-            tello.streamon()
-            print("Stream turned on")
-            
-
-            face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
     cam_direction = 0
+
     cont_var = StringVar(root, "0")
     dcam_var = StringVar(root, "0")
     throt_var = IntVar(root, 70)
     # Variables used to read Drones Speed and Accleration
     speed_var = IntVar(root, 0)
 
+    drone_var = IntVar(root, 0)
 
     battery_var =    StringVar(root, f'Battery:     {0}%')
     height_var =     StringVar(root, f'Height:      {0} cm')
@@ -69,7 +61,7 @@ if __name__ == "__main__":
 
 
     start.buttons(cont_var,throt_var, lmain, root, dcam_var, tello, speed_var, face_distance_var, battery_var,
-        height_var, time_var, temperatur_var, barometer_var) 
+        height_var, time_var, temperatur_var, barometer_var, drone_var) 
 
 
     xbox_flag = False
@@ -83,8 +75,17 @@ if __name__ == "__main__":
     while True:         # The Loop is used as an alternative for tkinter.mainloop
         if root.state() != 'normal':        # Forcefully closes everything, calls Attribute and Traceback Errors
             start.total_annihilation(dcam_var, tello,  root)
+            break
 
-        if countdown == 10 and drone_state == True:
+        connection_stat = drone_var.get()
+        if connection_stat == 1:
+            if drone_state == False:
+                tello.connect()
+                tello.streamon()
+                drone_state = True
+
+
+        if countdown >= 10 and drone_state == True:
             speed_var.set(start.get_drone_speed(tello))
 
             time = tello.get_flight_time()
@@ -111,12 +112,16 @@ if __name__ == "__main__":
         distance = face_distance_var.get()
         
         if controller == "1":               # Xbox Controll Mode with GTA Config
+            speed = joy.define_speed_xbox(speed)
+            throt_var.set(speed)
+
             try:
-                speed = joy.define_speed_xbox(speed)
-                throt_var.set(speed)
-                if drone_state == True:
+                try:
                     helper, cam_direction = joy.flight_xbox(tello, helper, speed, cam_direction)   
 
+                except:
+                    cont_var.set("0")
+                    messagebox.showerror(title="Controller Error", message="The drone doesnt seem to be connected")
             except:
                 cont_var.set("0")
                 print("couldnt send command")
@@ -129,7 +134,7 @@ if __name__ == "__main__":
                     space_flag = True
 
                 elif space_flag == True:
-                    space.flight(tello, help)
+                    helper = space.flight(tello, helper)
             except:
                 cont_var.set("0")
                 messagebox.showerror(title="Spacemouse Error", message="Couldnt Procced with controll Method \nCheck if your Spacemouse is properly connected")
@@ -165,14 +170,27 @@ if __name__ == "__main__":
                 print('Cap initialized!')  
 
         elif controller == "5":             # Xbox Controller with more classic Drone Controll
+
             speed = joy.define_speed_classic(speed)
             throt_var.set(speed)
-            if drone_state == True:
-                helper, cam_direction = joy.flight_xbox_classic(tello, helper, speed, cam_direction)
-                
+            try:    
+                try:
+                    helper, cam_direction = joy.flight_xbox_classic(tello, helper, speed, cam_direction)
+                except:
+                    cont_var.set("0")
+                    messagebox.showerror(title="Controller Error", message="The drone doesnt seem to be connected")
+            except:
+                cont_var.set("0")
+                messagebox.showerror(title="Controller Error", message="The drone doesnt seem to be connected")
+                        
         if cam_stream == "1":               # Drone Stream
-            start.drone_stream(tello, cam_direction)
-
+            try:
+                start.drone_stream(tello, cam_direction)
+            except:
+                dcam_var.set("0")
+                messagebox.showerror(title="Camera Error", message="Something went wrong with starting the Video Stream \nPlease try again or restart the Drone")
+                pass
+                
 
         root.update()                       # Updates the UI, alternativ to mainloop
         countdown += 1

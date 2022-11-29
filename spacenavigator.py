@@ -414,20 +414,23 @@ class Space_call():
             _active_device.set_led(state)
 
 
-    def flight(self, tello, help):
+    def flight(self, tello: Tello, help):
         a = self.read()
+
         print(a)
         sleep(0.1)
         if a[7][1] == 1 and a[7][0] == 1:
             easygui.msgbox("Press 'Ok' to engage throw takeoff",title="Info")
             tello.initiate_throw_takeoff()
-            help += 1
+            help = 1
         elif a[7][1] == 1 and help == 0:
             tello.takeoff()
-            help += 1
+            help = 1
             print("Takeoff")
         elif a[7][1] == 1 and help != 0:
             tello.land()
+            help = 0
         elif a[7][0] == 1 and help != 0:
             tello.flip("r")
         tello.send_rc_control(int(a[4]*100), int(a[5]*100), int(a[3]*100), int(a[6]*100))
+        return help
