@@ -50,24 +50,46 @@ class HandDetection():
     def tellocontroll(self, tello, speed):
         liste = self.lmlist
         if len(liste) != 0:
-            if (liste[8][2]-liste[5][2]) < 150 and (liste[8][2]-liste[5][2]) > -150:
+
+            #Distance between Index Finger Tip and Index Finger MCP
+            if (liste[8][2]-liste[5][2]) < 150 and (liste[8][2]-liste[5][2]) > -150 and (liste[8][1]-liste[5][1]) < 150 and (liste[8][1]-liste[5][1]) > -150:
+
+                #Distance between Thumb Tip and Pinky Tip bigger than 300(x-Achsis)?
                 if (liste[4][1]-liste[20][1]) > 300 or (liste[4][1]-liste[20][1]) < -300:
                     
+                    #Is Thumb to the left or the right of Pinky 
                     if liste[4][1] < liste[20][1] and (liste[17][2]-liste[20][2]) < 100:
                         tello.send_rc_control(-speed, 0, 0, 0)
                     
                     elif liste[4][1] > liste[20][1] and (liste[17][2]-liste[20][2]) < 100:
                         tello.send_rc_control(speed, 0, 0, 0)
                 
+                #Distance between Thumb Tip and Pinky Tip smaller than 300 (x-Achsis)?
                 elif (liste[4][1]-liste[20][1]) < 300 or (liste[4][1]-liste[20][1]) > -300:
                     
+                    #Is Thumb over or under Pinky (y-Achsis)
                     if liste[4][2] < liste[20][2] and (liste[17][1]-liste[20][1]) < 100:
                         tello.send_rc_control(0, 0, speed, 0)
                     
                     elif liste[4][2] > liste[20][2] and (liste[17][1]-liste[20][1]) < 100:
                         tello.send_rc_control(0, 0, -speed, 0)
+            
+            #Distance between Index Finger Tip and Index Finger MCP below 300 (both Achsis)
+            elif (liste[8][2]-liste[5][2]) > 150 or (liste[8][2]-liste[5][2]) < -150 and (liste[12][2]-liste[9][2]) < 100 and (liste[12][2]-liste[9][2]) > -100:
+                
+                if (liste[8][1]-liste[0][1]) < 300 or (liste[8][1]-liste[0][1]) > -300:
+                    if liste[8][2] > liste[5][2]:
+                        tello.send_rc_control(0, -speed, 0, 0)
+                    elif liste[8][2] < liste[5][2]:
+                        tello.send_rc_control(0, speed, 0, 0)
             else:
-                tello.send_rc_control(0, 0, 0, 0)
+                if (liste[12][2]-liste[9][2]) < 100 and (liste[12][2]-liste[9][2]) > -100:
+                    if liste[8][1] > liste[0][1]:
+                        tello.send_rc_control(0, 0, 0, speed)
+                    else:
+                        tello.send_rc_control(0, 0, 0, -speed)
+                else:
+                    tello.send_rc_control(0, 0, 0, 0)
         else:
             tello.send_rc_control(0, 0, 0, 0)
 
@@ -75,11 +97,12 @@ class HandDetection():
 
 
 
+
 def main():
     tello = Tello()
-    tello.connect()
-    tello.streamoff()
-    tello.streamon()
+    #tello.connect()
+    #tello.streamoff()
+    #tello.streamon()
     cap = cv2.VideoCapture(0)
     handtrack = HandDetection()
     help = 0
@@ -92,7 +115,7 @@ def main():
             #print(lmlist[8])
             #print(lmlist[12])
         if help == 0:
-            tello.takeoff()
+            #tello.takeoff()
             help += 1
         handtrack.tellocontroll(tello, 100) #Integer refers to speed (0-100)
 
