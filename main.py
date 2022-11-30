@@ -392,8 +392,7 @@ class GUI_mate():
         lmain = label
         cap = capture
 
-        data,image=cap.read()
-        image = cv2.cvtColor(cv2.flip(image,1),cv2.COLOR_BGR2RGB)
+        image = cv2.cvtColor(cv2.flip(cap,1),cv2.COLOR_BGR2RGB)
         img = Image.fromarray(image)   # type: ignore
         imgtk = ImageTk.PhotoImage(image=img)
         lmain.imgtk = imgtk # type: ignore
@@ -607,7 +606,7 @@ class HandDetection():
         img = self.tracking(img)
         lmlist = self.positions(img)
         self.tellocontroll(tello, throt)
-        return 
+        return img
 
         # cv2.imshow("Hand Tracking", img)
 

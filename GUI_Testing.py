@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     start.init(root, False, tello)
     # setting the width and height for the Webcam
-    width, height = 1280, 720
+    width, height = 1980, 1080
 
     if cam_state == True:
         print('Init cap...')
@@ -104,7 +104,7 @@ if __name__ == "__main__":
             countdown = 0
 
         if cam_state == True:               # If the cam has been enabled hand tracking will also start, not sure if this can be implemented to only start if enabled in the GUI
-            start.Cam(lmain, cap)    #type: ignore
+            start.Cam(lmain, img)    #type: ignore
        
         cam_stream = dcam_var.get()
         controller = cont_var.get()
@@ -157,10 +157,9 @@ if __name__ == "__main__":
                 cv2.destroyWindow("stream")
 
         elif controller == "4":             # Gesture Tracking
-            if cam_state == True:
-                data, img = cam.read()
-                img = cv2.cvtColor(cv2.flip(img,1),cv2.COLOR_BGR2RGB)
-                hand.tk_handflight(tello, cap, speed)    #type: ignore
+            if cam_finger_track == True:
+                img = hand.tk_handflight(tello, cap, speed)    #type: ignore
+                cam_state = True
             
             else:
                 print('Init cap...')
@@ -168,11 +167,10 @@ if __name__ == "__main__":
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 
-                cam_state = True           
+                cam_finger_track = True           
                 print('Cap initialized!')  
 
-        elif controller == "5":          
-               # Xbox Controller with more classic Drone Controll
+        elif controller == "5":             # Xbox Controller with more classic Drone Controll
 
             speed = joy.define_speed_classic(speed)
             throt_var.set(speed)
