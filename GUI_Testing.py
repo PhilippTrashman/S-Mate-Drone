@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     start.init(root, False, tello)
     # setting the width and height for the Webcam
-    width, height = 1920, 1080
+    width, height = 1280, 720
 
     if cam_state == True:
         print('Init cap...')
@@ -157,7 +157,9 @@ if __name__ == "__main__":
                 cv2.destroyWindow("stream")
 
         elif controller == "4":             # Gesture Tracking
-            if cam_finger_track == True:
+            if cam_state == True:
+                data, img = cam.read()
+                img = cv2.cvtColor(cv2.flip(img,1),cv2.COLOR_BGR2RGB)
                 hand.tk_handflight(tello, cap, speed)    #type: ignore
             
             else:
@@ -169,7 +171,8 @@ if __name__ == "__main__":
                 cam_state = True           
                 print('Cap initialized!')  
 
-        elif controller == "5":             # Xbox Controller with more classic Drone Controll
+        elif controller == "5":          
+               # Xbox Controller with more classic Drone Controll
 
             speed = joy.define_speed_classic(speed)
             throt_var.set(speed)
