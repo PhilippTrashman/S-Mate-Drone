@@ -12,6 +12,12 @@ from time import sleep
 
 from spacenavigator import Space_call
 
+COOLGRAY = '#3B3730'
+SAGE = '#9D9480'
+NUDE = '#8C7460'
+MONOBLACK = '#171717'
+RED = '#58181F'
+WHITE = '#FDFDFD'
 
 class XboxController(object):
     MAX_TRIG_VAL = math.pow(2, 8)
@@ -47,7 +53,6 @@ class XboxController(object):
         self._monitor_thread.daemon = True
         self._monitor_thread.start()
 
-
     def read(self):
         """returns the Xbox Controller Inputs, can be called to check if the controller works, but shouldnt get called \n
         left Stick  y = 0, x = 1 | right Stick = y/2, x/3 | A = 4 | X = 5| Y = 6 | B = 7| Dpad x = 8, y = 9 | RB = 10 | RT = 11 |
@@ -80,7 +85,6 @@ class XboxController(object):
         # left Stick  y = 0, x = 1 | right Stick = y/2, x/3 | A = 4 | X = 5| Y = 6 | B = 7| Dpad x = 8, y = 9 | RB = 10 | RT = 11 |
         # LB = 12 | LT = 13 | start = 14 | select = 15| RT - LT = 16 |
         return [left_y, left_x, right_y, right_x, a, x, y, b, Dpad_x, Dpad_y, rb, rt, lb, lt, start, select, extra]
-
 
     def _monitor_controller(self):
         """is used to monitor the events by the Controller and sort them for the read(self) function"""
@@ -324,6 +328,8 @@ class XboxController(object):
 
 class GUI_mate():
 
+
+
     def init(self, window, drone_state:bool, tello):
         """Is the Starting point for the UI, calling if the DJI Drone is enabled, later optional Activation should be implemented"""
         print('Started!')
@@ -408,12 +414,15 @@ class GUI_mate():
 
     def total_annihilation(self, drone_state, tello: Tello, root:Tk):
         """Just used for the Exit button to actually close all the windows""" 
-        try:
-            tello.end()
+        try:    
+            try:
+                tello.end()
+            except:
+                pass
+            cv2.destroyAllWindows()
+            root.destroy()
         except:
             pass
-        cv2.destroyAllWindows()
-        root.destroy()
 
     def connection_try(self, tello:Tello):
         try:
@@ -425,82 +434,113 @@ class GUI_mate():
     def buttons(self, v: StringVar,throt: IntVar, web_label: Label,window: Tk, drone_state: StringVar,
         tello: Tello, speed_var: IntVar, face_distance_var: IntVar, battery_var : StringVar,
         height_var: StringVar, time_var : StringVar, temperatur_var: StringVar,
-        barometer_var: StringVar, drone_var: IntVar):
+        barometer_var: StringVar, drone_var: IntVar, cam_state: IntVar, fly_flag:IntVar):
         """Alot of Variables are needed but for some reason dictionaries dont work with Tk variables, Buttons used by the main Window, v is a variable used to controll the actions taken by the menu, label is for the Hand Tracking Camera and window is the... well window"""
         drone = drone_state.get()
-        colour_lib = {"light bluish Grey":"#D6E0EF", "light Grey" : "#ededed", 'grey 16':'#292929'}
+        colour_lib = {"light bluish Grey":"#D6E0EF", "light Grey" : "#ededed", 'grey 16':'#292929', "mono black": "#171717",
+                      "Purple": "#613659", "Beige": "#6F5B3E", "Nude": "#8C7460", "Cool Gray": "#3B3730", "Sage": '#9D9480'}
         print("Creating buttons...")
         lmain = web_label
+        lmain.configure(background=MONOBLACK)
 
         root = window
+        root['background'] = MONOBLACK
         # Frames for the Placements of the widgets
-        l_frame = Frame(window, background= "#292929", width= 30, padx=5, height=40)
+        l_frame = Frame(window, background= MONOBLACK, width= 30, padx=5, height=40)
         l_frame.pack(side='left',fill=Y)
 
-        l_up_btn_frame = Frame(window, background="#D6E0EF", width= 40, padx=5, pady=5, height=40)
+        l_up_btn_frame = Frame(window, background=COOLGRAY, width= 40,padx=35, pady=5 ,height=40)
         l_up_btn_frame.pack(side='top', in_=l_frame)
 
-        l_lower_btn_frame = Frame(window, background="#D6E0EF", padx=35, pady=5, height=40)
+        dcam_frame = Frame(window, background=COOLGRAY, width= 40, padx=5, pady=5, height=1, highlightcolor=SAGE)
+        dcam_frame.pack(side='bottom', in_= l_up_btn_frame)
+        dcam_label = Label(text="Drone Camera", fg=WHITE, bg=COOLGRAY)
+        dcam_label.pack(in_=dcam_frame, side="top", anchor=W)
+
+        face_frame = Frame(window, background=COOLGRAY, width= 40, padx=5, pady=5, height=1, highlightcolor=SAGE)
+        face_frame.pack(side='bottom', in_= l_up_btn_frame)
+        face_label = Label(text="Face Cam", fg=WHITE, bg=COOLGRAY)
+        face_label.pack(in_=face_frame, side="top", anchor=W)
+
+        l_lower_btn_frame = Frame(window, background=COOLGRAY, padx=35, pady=5, height=40)
         l_lower_btn_frame.pack(side='bottom', in_=l_frame)
+
+        lift_frame= Frame(window, background=COOLGRAY, pady=10, height=40)
+        lift_frame.grid(column=0, row=0, in_= l_lower_btn_frame)
         
         # l2_btn_frame = Frame(window, background= "#292929", width= 15, padx=5)
         # l2_btn_frame.pack(side='bottom', in_=l_frame)
 
-        r_btn_frame = Frame(window, background= "#292929", width= 30, padx=5)
+        r_btn_frame = Frame(window, background= MONOBLACK, width= 30, padx=5)
         r_btn_frame.pack(side='right', fill=Y)
 
-        low_scale_frame = Frame(window, background= "#292929", height= 100, pady= 5)
+        low_scale_frame = Frame(window, background= MONOBLACK, height= 100, pady= 5)
         low_scale_frame.pack(side='bottom', fill= X)
 
         # Shows the different measurments of the drone
-        battery_label = Label(root, textvariable=battery_var, background="#D6E0EF",activebackground= "white")
-        height_label = Label(root, textvariable=height_var, background="#D6E0EF",activebackground= "white")
-        time_label = Label(root, textvariable=time_var, background="#D6E0EF",activebackground= "white")
-        temp_label = Label(root, textvariable=temperatur_var, background="#D6E0EF",activebackground= "white")
-        bar_label = Label(root, textvariable=barometer_var, background="#D6E0EF",activebackground= "white")
+        battery_label = Label(root, textvariable=battery_var, background=COOLGRAY,activebackground= "white", foreground=WHITE)
+        height_label = Label(root, textvariable=height_var, background=COOLGRAY,activebackground= "white", foreground=WHITE)
+        time_label = Label(root, textvariable=time_var, background=COOLGRAY,activebackground= "white", foreground=WHITE)
+        temp_label = Label(root, textvariable=temperatur_var, background=COOLGRAY,activebackground= "white", foreground=WHITE)
+        bar_label = Label(root, textvariable=barometer_var, background=COOLGRAY,activebackground= "white", foreground=WHITE)
 
         # Radiobuttons used to switch between controll modes, still not very pretty...
-        xbox_btn = Radiobutton(root, text = "Xbox", variable = v, value = "1", indicator = 0, background = "#D6E0EF", height=1, width= 15)   # type: ignore
-        xbox_classic = Radiobutton(root, text = "Classic", variable = v, value = "5", indicator = 0, background = "#D6E0EF", height=1, width= 15)   # type: ignore
-        space_btn = Radiobutton(root, text= "Space Mouse", variable= v, value= "2", indicator = 0, background = "#D6E0EF", height=1, width= 15)   # type: ignore
-        face_btn = Radiobutton(root, text= "Face Tracking", variable= v, value= "3", indicator = 0, background = "#D6E0EF", height=1, width= 15)   # type: ignore
-        gest_btn = Radiobutton(root, text= "Gesture Tracking", variable= v, value= "4", indicator = 0, background = "#D6E0EF", height=1, width= 15)   # type: ignore
+        xbox_btn = Radiobutton(root, text = "Xbox", variable = v, value = "1", indicator = 0, background = SAGE, height=1, width= 15)   # type: ignore
+        xbox_classic = Radiobutton(root, text = "Classic", variable = v, value = "5", indicator = 0, background = SAGE, height=1, width= 15)   # type: ignore
+        space_btn = Radiobutton(root, text= "Space Mouse", variable= v, value= "2", indicator = 0, background = SAGE, height=1, width= 15)   # type: ignore
+        face_btn = Radiobutton(root, text= "Face Tracking", variable= v, value= "3", indicator = 0, background = SAGE, height=1, width= 15)   # type: ignore
+        gest_btn = Radiobutton(root, text= "Gesture Tracking", variable= v, value= "4", indicator = 0, background = SAGE, height=1, width= 15)   # type: ignore
 
+        # Button to lift the Drone
+        lift_off = Radiobutton(root, text= "Lift \noff", variable= fly_flag, value= 1, indicator = 0, background = SAGE, height=2, width= 7)   # type: ignore
+        lift_on =  Radiobutton(root, text= "Land", variable= fly_flag, value= 0, indicator = 0, background = SAGE, height=2, width= 7)   # type: ignore
 
-        streamon_btn = Radiobutton(root, text = "On", variable = drone_state, value = "1", indicator = 0, background = "#D6E0EF", height=1, width= 7)         #type: ignore
-        streamoff_btn = Radiobutton(root, text = "Off", variable = drone_state, value = "0", indicator = 0, background = "#D6E0EF", height=1, width= 7)       #type: ignore
+        # Turns the Facecam on
+        camon_btn = Radiobutton(root, text = "On", variable = cam_state, value = "1", indicator = 0, background = SAGE, height=1, width= 7)         #type: ignore
+        camoff_btn = Radiobutton(root, text = "Off", variable = cam_state, value = "0", indicator = 0, background = SAGE, height=1, width= 7)       #type: ignore
+
+        #Turning the Drone Camera on
+        streamon_btn = Radiobutton(root, text = "On", variable = drone_state, value = "1", indicator = 0, background = SAGE, height=1, width= 7)         #type: ignore
+        streamoff_btn = Radiobutton(root, text = "Off", variable = drone_state, value = "0", indicator = 0, background = SAGE, height=1, width= 7)       #type: ignore
         # Different Buttons that are still unfinished
-        btn_exit = Button(root, text="Exit", width=10, height=2, background= "#58181F", command = lambda: self.total_annihilation(drone, tello,  root))
-        btn_con = Radiobutton(root, text = "On", variable = drone_var, value = 1, indicator = 0, background = "#D6E0EF", height=2, width= 15)
+        btn_exit = Button(root, text="Exit", width=10, height=2, background= RED, command = lambda: self.total_annihilation(drone, tello, root))       
+        btn_con = Radiobutton(root, text = "On", variable = drone_var, value = 1, indicator = 0, background = SAGE, height=2, width= 15)       #type: ignore
         
         # Different Scales used to visualize Drone speed and Throttle controll
-        throt_sca = Scale(window, from_=100, to = 1, sliderlength = 50, length= 400, width= 25, variable = throt, bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929', label="Throttle")
+        throt_sca = Scale(window,activebackground=NUDE ,troughcolor=SAGE ,from_=100, to = 1, sliderlength = 50, length= 400, width= 25, variable = throt, bg= MONOBLACK, foreground=WHITE, highlightbackground= SAGE, label="Throttle")
 
-    
-        speed_sca = Scale(window, from_=0, to = 20, sliderlength = 25, length= 300, width= 25,variable= speed_var ,orient='horizontal', bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929', state='disabled', label="Speed")
+        speed_sca = Scale(window ,troughcolor=SAGE, from_=0, to = 20, sliderlength = 25, length= 300, width= 25,variable= speed_var ,orient='horizontal', bg= MONOBLACK, foreground=WHITE, highlightbackground= SAGE, state='disabled', label="Speed")
         
-        face_distance_sca = Scale(window, from_=70, to = 10, sliderlength = 50, length= 250, width= 25,variable= face_distance_var , bg= '#292929', foreground="#9BCD9B", highlightbackground= '#292929')
+        face_distance_sca = Scale(window, troughcolor=SAGE, from_=10, to = 70, sliderlength = 35, length= 185, width= 25,variable= face_distance_var, orient='horizontal' , bg= MONOBLACK, foreground=WHITE, highlightbackground= SAGE, label='Tracking Distance')
         
         # Placing everything
-        btn_con.grid(column=0, row=0, in_ = l_up_btn_frame)
+        btn_con.pack(in_ = l_up_btn_frame, side='top', anchor=W)
         
         # Placing the Drone stats
-        battery_label.grid(column=0,columnspan=2,row=1, in_=l_up_btn_frame, sticky=W)
-        height_label.grid(column=0,columnspan=2,row=2, in_=l_up_btn_frame, sticky=W)
-        time_label.grid(column=0,columnspan=2,row=3, in_=l_up_btn_frame, sticky=W)
-        temp_label.grid(column=0,columnspan=2,row=4, in_=l_up_btn_frame, sticky=W)
-        bar_label.grid(column=0,columnspan=2,row=5, in_=l_up_btn_frame, sticky=W)
+        battery_label.pack(in_ = l_up_btn_frame, side='top', anchor=W)
+        height_label.pack(in_ = l_up_btn_frame, side='top', anchor=W)
+        time_label.pack(in_ = l_up_btn_frame, side='top', anchor=W)
+        temp_label.pack(in_ = l_up_btn_frame, side='top', anchor=W)
+        bar_label.pack(in_ = l_up_btn_frame, side='top', anchor=W)
+
+        # Buttons fpr the Facecam
+        camon_btn.pack(in_= face_frame, side='left', anchor=S)
+        camoff_btn.pack(in_= face_frame, side='left', anchor=S)
 
         # Buttons for the Drone camera
-        streamon_btn.grid(column=0, row=6, in_ = l_up_btn_frame, sticky=E)
-        streamoff_btn.grid(column=1, row=6, in_ = l_up_btn_frame, sticky=W)
+        streamon_btn.pack(in_= dcam_frame, side='left', anchor=S)
+        streamoff_btn.pack(in_= dcam_frame, side='left', anchor=S)
+
+        # Lift Buttons
+        lift_on.pack(in_= lift_frame, side='left')
+        lift_off.pack(in_= lift_frame, side='left')
 
         # Controll options
-        gest_btn.grid(column=0, row=7, in_= l_lower_btn_frame)
-        face_btn.grid(column=0, row=8, in_= l_lower_btn_frame)
-        space_btn.grid(column=0, row=9, in_= l_lower_btn_frame)
-        xbox_classic.grid(column=0, row=10, in_= l_lower_btn_frame)
-        xbox_btn.grid(column=0, row=11, in_= l_lower_btn_frame)
+        gest_btn.grid(column=0, row=1, in_= l_lower_btn_frame)
+        face_btn.grid(column=0, row=2, in_= l_lower_btn_frame)
+        space_btn.grid(column=0, row=3, in_= l_lower_btn_frame)
+        xbox_classic.grid(column=0, row=4, in_= l_lower_btn_frame)
+        xbox_btn.grid(column=0, row=5, in_= l_lower_btn_frame)
 
 
 
@@ -511,9 +551,9 @@ class GUI_mate():
 
         speed_sca.pack(side='bottom', anchor=CENTER, in_= low_scale_frame)
 
-        face_distance_sca.pack(side='right', in_= l_frame)
-        face_label = Label(text="Tracking \n Distance", fg="#9BCD9B", bg='#292929', )
-        face_label.pack(side='right', in_= l_frame, ipady= 5)
+        face_distance_sca.pack(side='bottom', in_= l_frame)
+        # face_label = Label(text="Tracking \n Distance", fg=WHITE, bg=MONOBLACK, )
+        # face_label.pack(side='right', in_= l_frame, ipady= 5)
 
         lmain.pack()
 
@@ -600,12 +640,13 @@ class HandDetection():
         else:
             tello.send_rc_control(0, 0, 0, 0)
 
-    def tk_handflight(self, tello: Tello, cam, throt: int):
+    def tk_handflight(self, tello: Tello, cam, throt: int, controll_flag: bool):
         data, img = cam.read()
         img = cv2.cvtColor(cv2.flip(img,1),cv2.COLOR_BGR2RGB)
         img = self.tracking(img)
         lmlist = self.positions(img)
-        self.tellocontroll(tello, throt)
+        if controll_flag == True:
+            self.tellocontroll(tello, throt)
         return img
 
         # cv2.imshow("Hand Tracking", img)

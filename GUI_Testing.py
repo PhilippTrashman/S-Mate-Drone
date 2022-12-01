@@ -14,6 +14,8 @@ if __name__ == "__main__":
     tello = Tello()
     root = Tk()
 
+    mate = ImageTk.PhotoImage(Image.open("Mate.png"))
+
     # Creating the camera Labels for the Drone
     lmain = Label(root)
     ldrone = Label(root)
@@ -43,7 +45,9 @@ if __name__ == "__main__":
 
     cam_direction = 0
 
+    fly_flag = IntVar(root, 0)
     cont_var = StringVar(root, "0")
+    fcam_var = IntVar(root, 0)
     dcam_var = StringVar(root, "0")
     throt_var = IntVar(root, 70)
     # Variables used to read Drones Speed and Accleration
@@ -61,12 +65,13 @@ if __name__ == "__main__":
 
 
     start.buttons(cont_var,throt_var, lmain, root, dcam_var, tello, speed_var, face_distance_var, battery_var,
-        height_var, time_var, temperatur_var, barometer_var, drone_var) 
+        height_var, time_var, temperatur_var, barometer_var, drone_var, fcam_var, fly_flag) 
 
 
     xbox_flag = False
     space_flag = False
     flight_flag = True
+    gesture_flag = False
     throttle_comp = 0
     print("starting loop")
     helper = 0
@@ -84,6 +89,25 @@ if __name__ == "__main__":
                 tello.streamon()
                 drone_state = True
 
+        helper2 = fly_flag.get()
+
+        if helper2 == 1 and drone_state == True:
+            try:
+                if helper == 0:
+                    tello.takeoff()
+                    helper = 1
+
+            except:
+                fly_flag.set(0)
+        
+        if helper2 == 0 and drone_state == True:
+            try:
+                if helper == 1:
+                    tello.land()
+                    helper = 0
+                
+            except:
+                helper = 0
 
         if countdown >= 10 and drone_state == True:
             speed_var.set(start.get_drone_speed(tello))
@@ -103,14 +127,31 @@ if __name__ == "__main__":
             barometer_var.set(f'Barometer:   {int(tello.get_barometer())} cm')
             countdown = 0
 
-        if cam_state == True:               # If the cam has been enabled hand tracking will also start, not sure if this can be implemented to only start if enabled in the GUI
-            start.Cam(lmain, img)    #type: ignore
-       
+
+        # Requesting the Values from the Variables
+        fcam_stream = fcam_var.get()       
         cam_stream = dcam_var.get()
         controller = cont_var.get()
         speed = throt_var.get()
         distance = face_distance_var.get()
+        # responsible for either showing the cam or our addiction  
+        if fcam_stream == 1:
+            if cam_state == False:
+                print('Init cap...')
+                cap = cv2.VideoCapture(0)
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+                print('Cap initialized!') 
+                cam_state = True  
+            else:         
+                img = hand.tk_handflight(tello, cap, speed, gesture_flag)
+                start.Cam(lmain, img)    #type: ignore
         
+        else:
+            lmain.configure(image=mate)
+        # Main Part for the Controlls
+        if controller != "4":
+            gesture_flag = False
         if controller == "1":               # Xbox Controll Mode with GTA Config
             speed = joy.define_speed_xbox(speed)
             throt_var.set(speed)
@@ -157,21 +198,12 @@ if __name__ == "__main__":
                 cv2.destroyWindow("stream")
 
         elif controller == "4":             # Gesture Tracking
-            if cam_finger_track == True:
-                img = hand.tk_handflight(tello, cap, speed)    #type: ignore
-                cam_state = True
-            
-            else:
-                print('Init cap...')
-                cap = cv2.VideoCapture(0)
-                cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+            if fcam_stream != 1:
+                fcam_var.set(1)
+            gesture_flag = True
 
-                cam_finger_track = True           
-                print('Cap initialized!')  
 
         elif controller == "5":             # Xbox Controller with more classic Drone Controll
-
             speed = joy.define_speed_classic(speed)
             throt_var.set(speed)
             try:    
@@ -191,8 +223,12 @@ if __name__ == "__main__":
                 dcam_var.set("0")
                 messagebox.showerror(title="Camera Error", message="Something went wrong with starting the Video Stream \nPlease try again or restart the Drone")
                 pass
-                
 
+        if helper == 1:
+            fly_flag.set(1)
+        elif helper == 0:
+            fly_flag.set(0)
+        
         root.update()                       # Updates the UI, alternativ to mainloop
         countdown += 1
         sleep(1/60)

@@ -256,6 +256,11 @@ class GUI(tk.Tk):
 		self._geometry_handler._angle_x = self.x_rotation_slider.get()
 		self._geometry_handler._angle_y = self.y_rotation_slider.get()
 		self._geometry_handler._angle_z = self.z_rotation_slider.get()
+	
+	def _set_rotations(self, x_cord, y_cord, z_cord):
+		self._geometry_handler._angle_x = x_cord
+		self._geometry_handler._angle_y = y_cord
+		self._geometry_handler._angle_z = z_cord
 
 	def _set_colors(self):
 		self._geometry_handler.change_fill_color(self.fill_color.get(), self._check_no_fill.get())
