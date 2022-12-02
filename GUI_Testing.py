@@ -14,7 +14,7 @@ if __name__ == "__main__":
     tello = Tello()
     root = Tk()
 
-    mate = ImageTk.PhotoImage(Image.open("Mate.png"))
+    mate = ImageTk.PhotoImage(Image.open("Logo.png"))
 
     # Creating the camera Labels for the Drone
     lmain = Label(root)
