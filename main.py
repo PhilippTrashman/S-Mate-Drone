@@ -19,6 +19,9 @@ MONOBLACK = '#171717'
 RED = '#58181F'
 WHITE = '#FDFDFD'
 
+class Titlebar():
+    
+
 class XboxController(object):
     MAX_TRIG_VAL = math.pow(2, 8)
     MAX_JOY_VAL = math.pow(2, 15)
