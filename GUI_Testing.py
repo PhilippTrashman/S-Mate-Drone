@@ -1,5 +1,6 @@
 from time import sleep
 from tkinter import messagebox
+from PIL import Image,ImageTk
 from main import *
 import threading
 
@@ -14,8 +15,10 @@ if __name__ == "__main__":
     tello = Tello()
     root = Tk()
 
-    mate = ImageTk.PhotoImage(Image.open("Logo.png"))
 
+    icon = ImageTk.PhotoImage(Image.open("Pictures\Icon.png"))
+    mate = ImageTk.PhotoImage(Image.open("Pictures\Logo.png"))
+    root.iconphoto(False, icon)
     # Creating the camera Labels for the Drone
     lmain = Label(root)
     ldrone = Label(root)
@@ -147,7 +150,7 @@ if __name__ == "__main__":
                 img = hand.tk_handflight(tello, cap, speed, gesture_flag)
                 start.Cam(lmain, img)    #type: ignore
         
-        else:
+        elif fcam_stream == 0:
             lmain.configure(image=mate)
         # Main Part for the Controlls
         if controller != "4":
