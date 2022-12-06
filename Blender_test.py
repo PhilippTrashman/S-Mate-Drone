@@ -1,21 +1,23 @@
-from time import sleep
+from visual.GUI import GUI
 
-import bpy
-blender = bpy
+import gc
 
-def set_location(name, xyz):
-    bpy.data.objects[name].location = xyz
+class main_:
+    ''' Class that launches everything '''
 
-def set_euler_rotation(name, xyz):
-    bpy.data.objects[name].rotation_euler = xyz
+    def __init__(self, *args, **kwargs):
+        self._initialise_gui(*args, **kwargs)
+        self._update_display()
+        self._gui.mainloop()
 
-def set_scale(name, xyz):
-    bpy.data.objects[name].scale = xyz
+    def _initialise_gui(self, *args, **kwargs):
+        self._gui = GUI(*args, **kwargs)
 
-x = 3.1415 * 0.5 
-y = 3.1415 * 0.5
-z = 3.1415 * 0.5
+    def _update_display(self):
+        self._gui.draw()
+        self._gui.after(1, self._update_display)
 
-for obj in bpy.data.objects:
-    print(obj.name)
+if __name__ == '__main__':
+    main_()
 
+gc.collect()

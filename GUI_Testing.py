@@ -1,7 +1,7 @@
 from time import sleep
 from tkinter import messagebox
 from PIL import Image,ImageTk
-from main import *
+from src.main import *
 import threading
 
 if __name__ == "__main__":
@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
     icon = ImageTk.PhotoImage(Image.open("Pictures\Icon.png"))
     mate = ImageTk.PhotoImage(Image.open("Pictures\Logo.png"))
-    root.iconphoto(False, icon)
+    root.iconphoto(False, icon)     #type: ignore
     # Creating the camera Labels for the Drone
     lmain = Label(root)
     ldrone = Label(root)
