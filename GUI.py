@@ -5,7 +5,7 @@ from src.main import *
 import subprocess
 import threading
 myargs = [
-    "C:/Users/itlab/Desktop/blender-3.3.1-windows-x64",     # File Path for the Blender Executable
+    "C:/Users/itlab/Desktop/blender-3.3.1-windows-x64/blender",     # File Path for the Blender Executable
     "Pictures/Dji-Tello.blend"        # The File Path for the Blend file
     ]
 if __name__ == "__main__":
