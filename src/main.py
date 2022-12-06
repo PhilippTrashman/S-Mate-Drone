@@ -304,22 +304,54 @@ class GUI_mate_org():
 
     def __init__(self):
         print("initialising UI")
+        self.tello = Tello()
+        self.mate = ImageTk.PhotoImage(Image.open("Pictures/Logo.png")) 
+        self.create_window()
+
+    def open_blender(self, button:Button):
+        # Opens Blender
+        myargs = [
+        "C:/Users/itlab/Desktop/blender-3.3.1-windows-x64/blender",     # File Path for the Blender Executable
+        "Pictures/Dji-Tello.blend"        # The File Path for the Blend file
+        ]
+        try:
+            blend = subprocess.Popen(myargs, stdin=subprocess.PIPE, stdout= subprocess.PIPE, stderr= subprocess.PIPE)
+            button.configure(state='disabled')
+        except:
+            messagebox.showerror(title="Blender not Found", message="Check if you set the correct filepath for Blender\nChange it if necessary in the GUI.py file")
+
+    def total_annihilation(self, tello: Tello, root:Tk):
+        """Just used for the Exit button to actually close all the windows""" 
+        try:    
+            try:
+                tello.end()
+            except:
+                pass
+            cv2.destroyAllWindows()
+            root.destroy()
+        except:
+            pass
 
     def create_window(self):
+        """creates the Tk window"""
         print("creating window")
         self.root = Tk()
         self.root['background'] = MONOBLACK
 
         icon = ImageTk.PhotoImage(Image.open("Pictures/Icon.png"))
-        mate = ImageTk.PhotoImage(Image.open("Pictures/Logo.png")) 
         self.root.iconphoto(False, icon)
+        self.assign_variables()
+        self.creating_widgets()
+        self.placing_widgets()
         print("window created")
 
     def create_labels(self):
+        """Placing necessary Labels for widget placements"""
         print("placing Labels")
-        self.lcam = Label(self.root)
-        self.ldrone = Label(self.root)
         window = self.root
+        self.lcam = Label(self.root)
+        self.lcam.pack(self.root)
+        self.ldrone = Label(self.root)
 
         self.l_frame = Frame(window, background= MONOBLACK, width= 30, padx=5, height=40)
         self.l_frame.pack(side='left',fill=Y)
@@ -347,19 +379,23 @@ class GUI_mate_org():
         self.r_btn_frame.pack(side='right', fill=Y)
 
         self.low_scale_frame = Frame(window, background= MONOBLACK, height= 100, pady= 5)
-        self.low_scale_frame.pack(side='bottom', fill= X)   
+        self.low_scale_frame.pack(side='bottom', fill= X) 
+          
         print("Labels placed")
 
     def assign_variables(self):
+        """Sets up all the necessary Variables for the Programm"""
         print("assigning Variables")
         root = self.root
+        self.drone_state = False
+
         self.fly_flag = IntVar(root, 0)
-        self.cont_var = StringVar(root, "0")
+        self.cont_var = IntVar(root, 0)
         self.fcam_var = IntVar(root, 0)
-        self.dcam_var = StringVar(root, "0")
+        self.dcam_var = IntVar(root, 0)
         self.throt_var = IntVar(root, 70)
         self.face_distance_var = IntVar(root, 20)
-        # Variables used to read Drones Speed and Accleration
+        # Variables used to read Drones Speed
         self.speed_var = IntVar(root, 0)
 
         self.drone_var = IntVar(root, 0)
@@ -370,17 +406,169 @@ class GUI_mate_org():
         self.temperatur_var = StringVar(root, f'Drone Temp:  {0} °C')
         self.barometer_var =  StringVar(root, f'Barometer:   {0} cm')
 
-        xbox_flag = False
-        space_flag = False
-        flight_flag = True
-        gesture_flag = False
-        throttle_comp = 0    
-        print("variables assigned")
-    def creating_buttons(self):
-        print("creating Buttons and sliders")
+        self.gesture_flag = False
 
-    def buttons():
-        print("Initialising Buttons")
+        self.cam_direction = 0      # checks to see what cam is turned on for the drone
+        self.helper = 0             # additional helper to check if the drone is flying
+        self.countdown = 0          # Countdown to reduce drone load
+        self.time_minutes = 0       # Variable to count flight minutes
+        print("variables assigned")
+
+    def get_variables(self):
+        self.flight = self.fly_flag.get()
+        self.controller = self.cont_var.get()
+        self.facecam = self.fcam_var.get()
+        self.dronecam = self.dcam_var.get()
+        self.throttle = self.throt_var.get()
+        self.distance = self.face_distance_var.get()
+
+        self.connect_flag = self.drone_var.get()
+
+    def drone_connect(self):
+        self.tello.connect()
+        self.tello.streamon()
+        self.drone_state = True
+
+    def creating_widgets(self):
+        """Creating necessary Widgets, shouldnt be called individually"""
+        print("creating Widgets")
+        root = self.root
+        # Drone Stats
+        self.battery_label = Label(root, textvariable= self.battery_var, background= COOLGRAY,activebackground= "white", foreground= WHITE)
+        self.height_label = Label(root, textvariable= self.height_var, background= COOLGRAY,activebackground= "white", foreground= WHITE)
+        self.time_label = Label(root, textvariable= self.time_var, background= COOLGRAY,activebackground= "white", foreground= WHITE)
+        self.temp_label = Label(root, textvariable= self.temperatur_var, background= COOLGRAY,activebackground= "white", foreground= WHITE)
+        self.bar_label = Label(root, textvariable= self.barometer_var, background= COOLGRAY,activebackground= "white", foreground= WHITE)
+
+        self.blender_btn = Button(root, text="View in\nBlender", background=SAGE, height= 2, width=15)
+        self.blender_btn.config(command=lambda: self.open_blender(self.blender_btn))
+
+        # Radiobuttons used to switch between controll modes, still not very pretty...
+        self.xbox_btn = Radiobutton(root, text = "Xbox", variable = self.cont_var, value = 1, indicator = 0, background = SAGE, height=1, width= 15)   # type: ignore
+        self.xbox_classic = Radiobutton(root, text = "Classic", variable = self.cont_var, value = 5, indicator = 0, background = SAGE, height=1, width= 15)   # type: ignore
+        self.space_btn = Radiobutton(root, text= "Space Mouse", variable= self.cont_var, valu e= 2, indicator = 0, background = SAGE, height=1, width= 15)   # type: ignore
+        self.face_btn = Radiobutton(root, text= "Face Tracking", variable= self.cont_var, value = 3, indicator = 0, background = SAGE, height=1, width= 15)   # type: ignore
+        self.gest_btn = Radiobutton(root, text= "Gesture Tracking", variable= self.cont_var, value = 4, indicator = 0, background = SAGE, height=1, width= 15)   # type: ignore
+
+        # Button to lift the Drone
+        self.lift_off = Radiobutton(root, text= "Lift \noff", variable= self.fly_flag, value= 1, indicator = 0, background = SAGE, height=2, width= 7)   # type: ignore
+        self.lift_on =  Radiobutton(root, text= "Land", variable= self.fly_flag, value= 0, indicator = 0, background = SAGE, height=2, width= 7)   # type: ignore
+
+        # Turns the Facecam on
+        self.camon_btn = Radiobutton(root, text = "On", variable = self.fcam_var, value = 1, indicator = 0, background = SAGE, height=1, width= 7)         #type: ignore
+        self.camoff_btn = Radiobutton(root, text = "Off", variable = self.fcam_var, value = 0, indicator = 0, background = SAGE, height=1, width= 7)       #type: ignore
+
+        #Turning the Drone Camera on
+        self.streamon_btn = Radiobutton(root, text = "On", variable = self.dcam_var, value = "1", indicator = 0, background = SAGE, height=1, width= 7)         #type: ignore
+        self.streamoff_btn = Radiobutton(root, text = "Off", variable = self.dcam_var, value = "0", indicator = 0, background = SAGE, height=1, width= 7)       #type: ignore
+        # Different Buttons that are still unfinished
+        self.btn_exit = Button(root, text="Exit", width=10, height=2, background= RED, command = lambda: self.total_annihilation(self.tello, root))       
+        self.btn_con = Radiobutton(root, text = "On", variable = self.drone_var, value = 1, indicator = 0, background = SAGE, height=2, width= 15)       #type: ignore
+        
+        # Different Scales used to visualize Drone speed and Throttle controll
+        self.throt_sca = Scale(root,activebackground=NUDE ,troughcolor=SAGE ,from_=100, to = 1, sliderlength = 50, length= 400, width= 25, variable = self.throt_var, bg= MONOBLACK, foreground=WHITE, highlightbackground= SAGE, label="Throttle")
+
+        self.speed_sca = Scale(root ,troughcolor=SAGE, from_=0, to = 20, sliderlength = 25, length= 300, width= 25,variable= self.speed_var ,orient='horizontal', bg= MONOBLACK, foreground=WHITE, highlightbackground= SAGE, state='disabled', label="Speed")
+        
+        self.face_distance_sca = Scale(root, troughcolor=SAGE, from_=10, to = 70, sliderlength = 35, length= 185, width= 25,variable= self.face_distance_var, orient='horizontal' , bg= MONOBLACK, foreground=WHITE, highlightbackground= SAGE, label='Tracking Distance')
+        print("Widgets created")
+
+    def placing_widgets(self):
+        """Placing created widgets"""
+        print("placing Widgets")
+        # Placing everything
+        self.btn_con.pack(in_ = self.l_up_btn_frame, side='top', anchor=W)
+        
+        # Placing the Drone stats
+        self.battery_label.pack(in_ = self.l_up_btn_frame, side='top', anchor=W)
+        self.height_label.pack(in_ = self.l_up_btn_frame, side='top', anchor=W)
+        self.time_label.pack(in_ = self.l_up_btn_frame, side='top', anchor=W)
+        self.temp_label.pack(in_ = self.l_up_btn_frame, side='top', anchor=W)
+        self.bar_label.pack(in_ = self.l_up_btn_frame, side='top', anchor=W)
+
+        # Buttons fpr the Facecam
+        self.camon_btn.pack(in_= self.face_frame, side='left', anchor=S)
+        self.camoff_btn.pack(in_= self.face_frame, side='left', anchor=S)
+
+        # Buttons for the Drone camera
+        self.streamon_btn.pack(in_= self.dcam_frame, side='left', anchor=S)
+        self.streamoff_btn.pack(in_= self.dcam_frame, side='left', anchor=S)
+
+        # Lift Buttons
+        self.lift_on.pack(in_= self.lift_frame, side='left')
+        self.lift_off.pack(in_= self.lift_frame, side='left')
+
+        # Controll options
+        self.gest_btn.grid(column=0, row=1, in_= self.l_lower_btn_frame)
+        self.face_btn.grid(column=0, row=2, in_= self.l_lower_btn_frame)
+        self.space_btn.grid(column=0, row=3, in_= self.l_lower_btn_frame)
+        self.xbox_classic.grid(column=0, row=4, in_= self.l_lower_btn_frame)
+        self.xbox_btn.grid(column=0, row=5, in_= self.l_lower_btn_frame)
+
+        # Exit Button
+        self.btn_exit.pack(side='bottom', in_= self.r_btn_frame)
+        # Button for opening Blender
+        self.blender_btn.pack(side='top', anchor=W, in_= self.r_btn_frame)
+
+        # Scales for Stats and Adjustments
+        self.throt_sca.pack(anchor=CENTER,side="right", in_ = self.r_btn_frame)
+
+        self.speed_sca.pack(side='bottom', anchor=CENTER, in_= self.low_scale_frame)
+
+        self.face_distance_sca.pack(side='bottom', in_= self.l_frame)
+        print("Widgets placed")
+
+    def drone_rotation(self):
+        """Writing drone rotation to a txt which gets read with Blender"""
+        print("getting drone rotation")
+        pitch = self.tello.get_pitch()
+        roll = self.tello.get_roll()
+        yaw = self.tello.get_yaw()
+
+        with open("drone_data.txt", "w") as txt:
+            txt.write(f'{pitch},{roll},{yaw}')
+
+    def landing_widget(self):
+        if self.flight == 1:
+            try:
+                if self.helper == 0:
+                    self.tello.takeoff()
+                    self.helper = 1
+            except:
+                self.fly_flag.set(0)
+
+        if self.flight == 0:
+            try:
+                if self.helper == 1:
+                    self.tello.land()
+                    self.helper = 0
+            except:
+                self.helper = 0
+
+    def drone_info(self):
+        print("reading info")
+
+        
+
+    def main(self):
+        print("starting loop")
+        root = self.root
+        while True:
+            self.get_variables()
+            if root.state() != 'normal':
+                self.total_annihilation(self.tello, root)
+                break
+
+            if self.connect_flag == 1:
+                if self.drone_state == False:
+                    self.drone_connect()
+            
+            if self.drone_state == True:
+                self.landing_widget()
+
+
+
+            
 class GUI_mate():
 
     def init(self, window: Tk, drone_state:bool, tello):
@@ -459,7 +647,7 @@ class GUI_mate():
 
         cv2.imshow("stream", frame)
 
-    def total_annihilation(self, drone_state, tello: Tello, root:Tk):
+    def total_annihilation(self, tello: Tello, root:Tk):
         """Just used for the Exit button to actually close all the windows""" 
         try:    
             try:
