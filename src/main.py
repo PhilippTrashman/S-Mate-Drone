@@ -300,6 +300,87 @@ class XboxController(object):
             speed = 100       
         return speed
 
+class GUI_mate_org():
+
+    def __init__(self):
+        print("initialising UI")
+
+    def create_window(self):
+        print("creating window")
+        self.root = Tk()
+        self.root['background'] = MONOBLACK
+
+        icon = ImageTk.PhotoImage(Image.open("Pictures/Icon.png"))
+        mate = ImageTk.PhotoImage(Image.open("Pictures/Logo.png")) 
+        self.root.iconphoto(False, icon)
+        print("window created")
+
+    def create_labels(self):
+        print("placing Labels")
+        self.lcam = Label(self.root)
+        self.ldrone = Label(self.root)
+        window = self.root
+
+        self.l_frame = Frame(window, background= MONOBLACK, width= 30, padx=5, height=40)
+        self.l_frame.pack(side='left',fill=Y)
+
+        self.l_up_btn_frame = Frame(window, background=COOLGRAY, width= 40,padx=35, pady=5 ,height=40)
+        self.l_up_btn_frame.pack(side='top', in_=self.l_frame)
+
+        self.dcam_frame = Frame(window, background=COOLGRAY, width= 40, padx=5, pady=5, height=1, highlightcolor=SAGE)
+        self.dcam_frame.pack(side='bottom', in_= self.l_up_btn_frame)
+        self.dcam_label = Label(text="Drone Camera", fg=WHITE, bg=COOLGRAY)
+        self.dcam_label.pack(in_=self.dcam_frame, side="top", anchor=W)     
+
+        self.face_frame = Frame(window, background=COOLGRAY, width= 40, padx=5, pady=5, height=1, highlightcolor=SAGE)
+        self.face_frame.pack(side='bottom', in_= self.l_up_btn_frame)
+        self.face_label = Label(text="Face Cam", fg=WHITE, bg=COOLGRAY)
+        self.face_label.pack(in_= self.face_frame, side="top", anchor=W) 
+
+        self.l_lower_btn_frame = Frame(window, background=COOLGRAY, padx=35, pady=5, height=40)
+        self.l_lower_btn_frame.pack(side='bottom', in_= self.l_frame)
+
+        self.lift_frame= Frame(window, background=COOLGRAY, pady=10, height=40)
+        self.lift_frame.grid(column=0, row=0, in_= self.l_lower_btn_frame)   
+
+        self.r_btn_frame = Frame(window, background= MONOBLACK, width= 30, padx=5)
+        self.r_btn_frame.pack(side='right', fill=Y)
+
+        self.low_scale_frame = Frame(window, background= MONOBLACK, height= 100, pady= 5)
+        self.low_scale_frame.pack(side='bottom', fill= X)   
+        print("Labels placed")
+
+    def assign_variables(self):
+        print("assigning Variables")
+        root = self.root
+        self.fly_flag = IntVar(root, 0)
+        self.cont_var = StringVar(root, "0")
+        self.fcam_var = IntVar(root, 0)
+        self.dcam_var = StringVar(root, "0")
+        self.throt_var = IntVar(root, 70)
+        self.face_distance_var = IntVar(root, 20)
+        # Variables used to read Drones Speed and Accleration
+        self.speed_var = IntVar(root, 0)
+
+        self.drone_var = IntVar(root, 0)
+        # Drone variables
+        self.battery_var =    StringVar(root, f'Battery:     {0}%')
+        self.height_var =     StringVar(root, f'Height:      {0} cm')
+        self.time_var =       StringVar(root, f'Flight Time: {0} s')
+        self.temperatur_var = StringVar(root, f'Drone Temp:  {0} °C')
+        self.barometer_var =  StringVar(root, f'Barometer:   {0} cm')
+
+        xbox_flag = False
+        space_flag = False
+        flight_flag = True
+        gesture_flag = False
+        throttle_comp = 0    
+        print("variables assigned")
+    def creating_buttons(self):
+        print("creating Buttons and sliders")
+
+    def buttons():
+        print("Initialising Buttons")
 class GUI_mate():
 
     def init(self, window: Tk, drone_state:bool, tello):
