@@ -196,19 +196,6 @@ class XboxController(object):
             except:
                 pass
 
-        elif cont.read()[7] == 1:       #Video Direction
-            if cam_direction == 0:
-                try:
-                    tello.set_video_direction(0)
-                    cam_direction = 1
-                except:
-                    pass
-            elif cam_direction == 1:
-                try:
-                    tello.set_video_direction(1)
-                    cam_direction = 0
-                except:
-                    pass
 
         tello.send_rc_control(int(cont.read()[0]*speed), int(cont.read()[1]*speed), int(cont.read()[16]*speed), int(cont.read()[3]*100))
         return helper, cam_direction
@@ -271,19 +258,6 @@ class XboxController(object):
             except:
                 pass
 
-        elif cont.read()[7] == 1:       #Video Direction
-            if cam_direction == 0:
-                try:
-                    tello.set_video_direction(0)
-                    cam_direction = 1
-                except:
-                    pass
-            elif cam_direction == 1:
-                try:
-                    tello.set_video_direction(1)
-                    cam_direction = 0
-                except:
-                    pass
 
         # send_rec_control configuration is left/right, back/forth, up/down, yaw
         tello.send_rc_control(int(cont.read()[3]*speed), int(cont.read()[2]*speed), int(cont.read()[1]*speed), int(cont.read()[0]*100))
@@ -650,7 +624,6 @@ class HandDetection():
             self.tellocontroll(tello, throt)
         return img
 
-        # cv2.imshow("Hand Tracking", img)
 
 class FaceTracking():
     def resize(self, image):                #Smaller Picture
