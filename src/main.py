@@ -1,7 +1,8 @@
 import math
 import threading
 from tkinter import *  # type: ignore
-
+from tkinter import messagebox
+import subprocess
 
 import cv2
 import easygui
@@ -10,8 +11,6 @@ from djitellopy import Tello
 from inputs import get_gamepad
 from PIL import Image, ImageTk
 from time import sleep
-
-from src.spacenavigator import Space_call
 
 COOLGRAY = '#3B3730'
 SAGE = '#9D9480'
@@ -303,11 +302,7 @@ class XboxController(object):
 
 class GUI_mate():
 
-
-
-    def init(self, window, drone_state:bool, tello):
-        """Is the Starting point for the UI, calling if the DJI Drone is enabled, later optional Activation should be implemented"""
-        print('Started!')
+    def init(self, window: Tk, drone_state:bool, tello):
 
         print('Init UI...')
         root = window
@@ -345,10 +340,6 @@ class GUI_mate():
         mn.add_cascade(label='Help', menu=help_menu) 
         help_menu.add_command(label='Feedback') 
         help_menu.add_command(label='Contact') 
-
-    def scale (self, window: Tk):   # Scale will be implemented seperatly in Buttons
-        sc1= Scale(window, from_=100, to=10, sliderlength= 50, length= 250, width= 25) 
-        sc1.pack() # Must implement speed controll with drone (set_speed(x))
 
     def throttle(self, val, tello:Tello):
         """Used in conjunction with a Tkinter Scale to Throttle the speed the DJI Drone"""
@@ -406,6 +397,20 @@ class GUI_mate():
         except:
             pass
           
+    def open_blender(self, button:Button):
+        # Opens Blender
+        myargs = [
+        "C:/Users/itlab/Desktop/blender-3.3.1-windows-x64/blender",     # File Path for the Blender Executable
+        "Pictures/Dji-Tello.blend"        # The File Path for the Blend file
+        ]
+        try:
+            blend = subprocess.Popen(myargs, stdin=subprocess.PIPE, stdout= subprocess.PIPE, stderr= subprocess.PIPE)
+            button.configure(state='disabled')
+        except:
+            messagebox.showerror(title="Blender not Found", message="Check if you set the correct filepath for Blender\nChange it if necessary in the GUI.py file")
+        
+
+    # Starting the Window
     def buttons(self, v: StringVar,throt: IntVar, web_label: Label,window: Tk, drone_state: StringVar,
         tello: Tello, speed_var: IntVar, face_distance_var: IntVar, battery_var : StringVar,
         height_var: StringVar, time_var : StringVar, temperatur_var: StringVar,
@@ -451,6 +456,10 @@ class GUI_mate():
 
         low_scale_frame = Frame(window, background= MONOBLACK, height= 100, pady= 5)
         low_scale_frame.pack(side='bottom', fill= X)
+
+        # Button to enable Blender
+        blender_btn = Button(root, text="View in\nBlender", background=SAGE, height= 2, width=15)
+        blender_btn.config(command=lambda: self.open_blender(blender_btn))
 
         # Shows the different measurments of the drone
         battery_label = Label(root, textvariable=battery_var, background=COOLGRAY,activebackground= "white", foreground=WHITE)
@@ -520,6 +529,8 @@ class GUI_mate():
 
 
         btn_exit.pack(side='bottom', in_= r_btn_frame)
+
+        blender_btn.pack(side='top', anchor=W, in_= r_btn_frame)
 
         # Scales for Stats and Adjustments
         throt_sca.pack(anchor=CENTER,side="right", in_ = r_btn_frame)
@@ -623,7 +634,6 @@ class HandDetection():
         if controll_flag == True:
             self.tellocontroll(tello, throt)
         return img
-
 
 class FaceTracking():
     def resize(self, image):                #Smaller Picture

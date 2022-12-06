@@ -3,11 +3,12 @@ from tkinter import messagebox
 from PIL import Image,ImageTk
 from src.main import *
 import subprocess
-import threading
-myargs = [
-    "C:/Users/itlab/Desktop/blender-3.3.1-windows-x64/blender",     # File Path for the Blender Executable
-    "Pictures/Dji-Tello.blend"        # The File Path for the Blend file
-    ]
+from src.spacenavigator import Space_call
+
+# myargs = [
+#     "C:/Users/itlab/Desktop/blender-3.3.1-windows-x64/blender",     # File Path for the Blender Executable
+#     "Pictures/Dji-Tello.blend"        # The File Path for the Blend file
+#     ]
 if __name__ == "__main__":
 
     # defining class objects
@@ -33,10 +34,10 @@ if __name__ == "__main__":
 
     drone_state = False
     yaw, roll, pitch = 0, 0, 0
-    try:
-        blend = subprocess.Popen(myargs, stdin=subprocess.PIPE, stdout= subprocess.PIPE, stderr= subprocess.PIPE)
-    except:
-        messagebox.showerror(title="Blender not Found", message="Check if you set the correct filepath for Blender\nChange it if necessary in the GUI.py file")
+    # try:
+    #     blend = subprocess.Popen(myargs, stdin=subprocess.PIPE, stdout= subprocess.PIPE, stderr= subprocess.PIPE)
+    # except:
+    #     messagebox.showerror(title="Blender not Found", message="Check if you set the correct filepath for Blender\nChange it if necessary in the GUI.py file")
     # Starting the Window
 
     start.init(root, False, tello)
