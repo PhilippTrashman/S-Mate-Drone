@@ -133,7 +133,7 @@ if __name__ == "__main__":
                     time_seconds = time - 60*time_minutes
                     time_var.set(f'Flight Time: {time_minutes} min  {time_seconds} s')
                 else:
-                    time_var.set(f'Flight Time: {time}')
+                    time_var.set(f'Flight Time: {time} s')
 
                 battery_var.set(f'Battery:     {tello.get_battery()}%')
                 height_var.set(f'Height:      {tello.get_height()} cm')
