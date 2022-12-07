@@ -17,7 +17,7 @@ if __name__ == "__main__":
     space = Space_call()
     hand = HandDetection()
     face = FaceTracking()
-    tello = Tello()
+    tello = Tello() 
     root = Tk()
 
 
