@@ -708,7 +708,7 @@ class FaceTracking():
             self.controlling(tello, detected_faces, distance)
         else:
             tello.send_rc_control(0, 0, 0, 0)
-        cv2.imshow("Detection", frame)
+        cv2.imshow("Face Tracking", frame)
         # img = Image.fromarray(frame)    #type: ignore
         # imgtk = ImageTk.PhotoImage(image=img)
         # label.imgtk = imgtk     #type: ignore
