@@ -13,7 +13,19 @@ class GUI_mate_org():
         self.face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
         self.mate = ImageTk.PhotoImage(Image.open("Pictures/Logo.png")) 
+        self.width, self.height = 1980, 1080
         self.create_window()
+
+    def cam(self, label: Label, capture):    # Replaced by the new HandDetection class
+        """Older version of the Hand Tracking developed by Calvin (and Google), label = placement as a label widget, cap = camera """
+        lmain = label
+        cap = capture
+
+        image = cv2.cvtColor(cv2.flip(cap,1),cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(image)   # type: ignore
+        imgtk = ImageTk.PhotoImage(image=img)
+        lmain.imgtk = imgtk # type: ignore
+        lmain.configure(image=imgtk)
 
     def open_blender(self, button:Button):
         # Opens Blender
@@ -293,6 +305,9 @@ class GUI_mate_org():
             self.temperatur_var.set(f'Drone Temp:  {self.tello.get_temperature()} °C')
             self.barometer_var.set(f'Barometer:   {int(self.tello.get_barometer())} cm')
             self.countdown = 0
+        self.countdown += 1
+
+        
 
     def xbox(self, var):
         try:
@@ -324,6 +339,7 @@ class GUI_mate_org():
 
     def face_track(self):
         self.face.tk_facetrack(self.tello, self.distance, self.face_cascade) 
+        cv2.destroyWindow("stream")
 
     def controlls(self):
         self.throt_var.set(self.throttle)
@@ -337,7 +353,33 @@ class GUI_mate_org():
             self.spacemouse()
         
         elif self.controller == 3:
-            print("not done")
+            self.face_track()
+        
+        elif self.controller == 4:
+            if self.facecam != 1:
+                self.fcam_var.set(1)
+            self.gesture_flag = True
+        
+        elif self.controller != 4:
+            self.gesture_flag = False
+    
+    def main_label(self):
+        """Either sets up the camera or displayes the main logo"""
+        if self.facecam == 1:
+            if cam_state == False:
+                print('Init cap...')
+                cap = cv2.VideoCapture(0)
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
+                print('Cap initialized!') 
+                cam_state = True  
+            else:         
+                img = self.hand.tk_handflight(self.tello, cap, self.throttle, self.gesture_flag)       #type: ignore
+                self.cam(self.lcam, img)
+        
+        elif self.facecam == 0:
+            self.lcam.configure(image=self.mate)
+
     def main(self):
         print("starting loop")
         root = self.root
@@ -347,6 +389,8 @@ class GUI_mate_org():
                 self.total_annihilation(self.tello, root)
                 break
 
+            self.main_label
+
             if self.connect_flag == 1:
                 if self.drone_state == False:
                     self.drone_connect()
@@ -354,4 +398,6 @@ class GUI_mate_org():
             if self.drone_state == True:
                 self.landing_widget()
                 self.drone_info()
+            
+            self.controlls()
  
