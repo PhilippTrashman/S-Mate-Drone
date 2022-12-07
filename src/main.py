@@ -11,6 +11,7 @@ from djitellopy import Tello
 from inputs import get_gamepad
 from PIL import Image, ImageTk
 from time import sleep
+from spacenavigator import Space_call
 
 COOLGRAY = '#3B3730'
 SAGE = '#9D9480'
@@ -195,9 +196,10 @@ class XboxController(object):
             except:
                 pass
 
+        speed = self.define_speed_xbox(speed)
 
         tello.send_rc_control(int(cont.read()[0]*speed), int(cont.read()[1]*speed), int(cont.read()[16]*speed), int(cont.read()[3]*100))
-        return helper, cam_direction
+        return helper, cam_direction, speed
         
     def flight_xbox_classic(self, tello: Tello, helper: int, speed :int, cam_direction: int):
         """More Classic Drone Controll, as requested
@@ -256,11 +258,11 @@ class XboxController(object):
                 tello.emergency()
             except:
                 pass
-
+        speed = self.define_speed_classic(speed)
 
         # send_rec_control configuration is left/right, back/forth, up/down, yaw
         tello.send_rc_control(int(cont.read()[3]*speed), int(cont.read()[2]*speed), int(cont.read()[1]*speed), int(cont.read()[0]*100))
-        return helper, cam_direction
+        return helper, cam_direction, speed
 
     def define_speed_xbox(self, current_speed) -> int:
         """For Xbox controll mode!, Returns a value to reduce or increase drone speed for controllers in increments of 5"""
@@ -305,6 +307,11 @@ class GUI_mate_org():
     def __init__(self):
         print("initialising UI")
         self.tello = Tello()
+        self.joy = XboxController()
+        self.space = Space_call()
+        self.hand = HandDetection()
+        self.face = FaceTracking()
+
         self.mate = ImageTk.PhotoImage(Image.open("Pictures/Logo.png")) 
         self.create_window()
 
@@ -407,6 +414,7 @@ class GUI_mate_org():
         self.barometer_var =  StringVar(root, f'Barometer:   {0} cm')
 
         self.gesture_flag = False
+        self.space_flag = False
 
         self.cam_direction = 0      # checks to see what cam is turned on for the drone
         self.helper = 0             # additional helper to check if the drone is flying
@@ -415,6 +423,7 @@ class GUI_mate_org():
         print("variables assigned")
 
     def get_variables(self):
+        """Used to get the necessary variables"""
         self.flight = self.fly_flag.get()
         self.controller = self.cont_var.get()
         self.facecam = self.fcam_var.get()
@@ -425,6 +434,7 @@ class GUI_mate_org():
         self.connect_flag = self.drone_var.get()
 
     def drone_connect(self):
+        """Connects to the drone and sets the connected Flag to True"""
         self.tello.connect()
         self.tello.streamon()
         self.drone_state = True
@@ -528,7 +538,31 @@ class GUI_mate_org():
         with open("drone_data.txt", "w") as txt:
             txt.write(f'{pitch},{roll},{yaw}')
 
+    def get_drone_speed(self, tello:Tello,) -> int:
+        """Gets the current speed of the drone"""
+        x_speed = tello.get_speed_x()
+        y_speed = tello.get_speed_y()
+        z_speed = tello.get_speed_z()
+
+        if x_speed >= y_speed and x_speed >= z_speed:
+            return x_speed
+        elif y_speed >= x_speed and y_speed >= z_speed:
+            return y_speed
+        else:
+            return z_speed
+
+    def get_flight_time(self):
+        """calls current flight time and rounds them up to minutes"""
+        self.time = self.tello.get_flight_time()
+        if self.time >= 120:
+            self.time_minutes = self.time//60
+            self.time_second = self.time - 60*self.time_minutes
+            self.time_var.set(f'Flight Time: {self.time_minutes} min  {time_seconds} s')
+        else:
+            self.time_var.set(f'Flight Time: {self.time} s')
+
     def landing_widget(self):
+        """Helps to determine if the Drone is currently flying"""
         if self.flight == 1:
             try:
                 if self.helper == 0:
@@ -548,7 +582,61 @@ class GUI_mate_org():
     def drone_info(self):
         print("reading info")
 
+        if self.countdown % 2 == 0:
+            self.drone_rotation()
+
+        if self.countdown >= 10:
+            self.speed_var.set(self.get_drone_speed(self.tello))    
+            self.get_flight_time()
+            self.battery_var.set(f'Battery:     {self.tello.get_battery()}%')
+            self.height_var.set(f'Height:      {self.tello.get_height()} cm')
+            self.temperatur_var.set(f'Drone Temp:  {self.tello.get_temperature()} °C')
+            self.barometer_var.set(f'Barometer:   {int(self.tello.get_barometer())} cm')
+            self.countdown = 0
+
+    def xbox(self, var):
+        try:
+            try:
+                if var == 1:
+                    self.helper, self.cam_direction, self.throttle = self.joy.flight_xbox(self.tello, self.helper, self.throttle, self.cam_direction)   
+            
+                elif var == 5:
+                    self.helper, self.cam_direction, self.throttle = self.joy.flight_xbox_classic(self.tello, self.helper, self.throttle, self.cam_direction)   
+            
+            except:
+                self.cont_var.set(0)
+                messagebox.showerror(title="Controller Error", message="The drone doesnt seem to be connected")
+        except:
+            self.cont_var.set(0)
+            print("couldnt send command")
+            messagebox.showerror(title="Controller Error", message="Couldnt Procced with controll Method \nCheck if your Xbox Controller is properly connected")  
+
+    def spacemouse(self):
+        try:
+            if self.space_flag == False:
+                dev = self.space.open(callback=None, button_callback=self.space.toggle_led)
+                self.space_flag = True
+            elif self.space_flag == True:
+                helper = self.space.flight(self.tello, helper)
+        except:
+            self.cont_var.set("0")
+            messagebox.showerror(title="Spacemouse Error", message="Couldnt Procced with controll Method \nCheck if your Spacemouse is properly connected")
+
+    def face_track(self):
+        self.face.tk_facetrack() 
+
+    def controlls(self):
+        self.throt_var.set(self.throttle)
+
+        if self.controller == 1:
+            self.xbox(1)
+        elif self.controller == 5:
+            self.xbox(5)
         
+        elif self.controller == 2:
+            self.spacemouse()
+        
+        elif self.controller == 3:
 
     def main(self):
         print("starting loop")
@@ -565,6 +653,7 @@ class GUI_mate_org():
             
             if self.drone_state == True:
                 self.landing_widget()
+                self.drone_info()
 
 
 
