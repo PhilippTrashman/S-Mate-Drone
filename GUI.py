@@ -20,9 +20,8 @@ if __name__ == "__main__":
     tello = Tello() 
     root = Tk()
 
-
-    icon = ImageTk.PhotoImage(Image.open("Pictures\Icon.png"))      #type: ignore
-    mate = ImageTk.PhotoImage(Image.open("Pictures\Logo.png"))      #type: ignore
+    icon = ImageTk.PhotoImage(Image.open("Pictures/Icon.png"))      #type: ignore
+    mate = ImageTk.PhotoImage(Image.open("Pictures/Logo.png"))      #type: ignore
     root.iconphoto(False, icon)     #type: ignore
     # Creating the camera Labels for the Drone
     lmain = Label(root)
@@ -34,6 +33,7 @@ if __name__ == "__main__":
 
     drone_state = False
     yaw, roll, pitch = 0, 0, 0
+    
     # try:
     #     blend = subprocess.Popen(myargs, stdin=subprocess.PIPE, stdout= subprocess.PIPE, stderr= subprocess.PIPE)
     # except:
