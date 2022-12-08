@@ -196,10 +196,8 @@ class XboxController(object):
             except:
                 pass
 
-        speed = self.define_speed_xbox(speed)
-
         tello.send_rc_control(int(cont.read()[0]*speed), int(cont.read()[1]*speed), int(cont.read()[16]*speed), int(cont.read()[3]*100))
-        return helper, cam_direction, speed
+        return helper, cam_direction
         
     def flight_xbox_classic(self, tello: Tello, helper: int, speed :int, cam_direction: int):
         """More Classic Drone Controll, as requested
@@ -258,7 +256,6 @@ class XboxController(object):
                 tello.emergency()
             except:
                 pass
-        speed = self.define_speed_classic(speed)
 
         # send_rec_control configuration is left/right, back/forth, up/down, yaw
         tello.send_rc_control(int(cont.read()[3]*speed), int(cont.read()[2]*speed), int(cont.read()[1]*speed), int(cont.read()[0]*100))

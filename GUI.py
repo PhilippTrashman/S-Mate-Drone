@@ -39,7 +39,7 @@ if __name__ == "__main__":
     # except:
     #     messagebox.showerror(title="Blender not Found", message="Check if you set the correct filepath for Blender\nChange it if necessary in the GUI.py file")
     # Starting the Window
-
+    face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
     start.init(root, False, tello)
     # setting the width and height for the Webcam
     width, height = 1980, 1080
@@ -198,21 +198,13 @@ if __name__ == "__main__":
                 messagebox.showerror(title="Spacemouse Error", message="Couldnt Procced with controll Method \nCheck if your Spacemouse is properly connected")
 
         elif controller == "3":             # Face Tracking
-            if drone_state == False:
-                tello.connect()
-                print("turning the drone stream on...")
-                tello.streamoff()
-                tello.streamon()
-                print("Stream turned on")
-                print("reading drone Frames...")
-                drone_cam = tello.get_frame_read().frame
-                print("frames read")                
-                face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
-                drone_state = True
+            if cam_stream =="1":
+                cv2.destroyWindow("stream")
+                dcam_var.set("0")
             
             else:
                 face.tk_facetrack(tello, distance, face_cascade)  #type: ignore
-                cv2.destroyWindow("stream")
+
 
         elif controller == "4":             # Gesture Tracking
             if fcam_stream != 1:
