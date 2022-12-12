@@ -12,9 +12,9 @@ class GUI_mate_org():
         self.face = FaceTracking()
         self.face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
+        self.create_window()
         self.mate = ImageTk.PhotoImage(Image.open("Pictures/Logo.png")) 
         self.width, self.height = 1980, 1080
-        self.create_window()
 
     def cam(self, label: Label, capture):    # Replaced by the new HandDetection class
         """Older version of the Hand Tracking developed by Calvin (and Google), label = placement as a label widget, cap = camera """
@@ -60,6 +60,7 @@ class GUI_mate_org():
         icon = ImageTk.PhotoImage(Image.open("Pictures/Icon.png"))
         self.root.iconphoto(False, icon)
         self.assign_variables()
+        self.create_labels()
         self.creating_widgets()
         self.placing_widgets()
         print("window created")
@@ -68,8 +69,8 @@ class GUI_mate_org():
         """Placing necessary Labels for widget placements"""
         print("placing Labels")
         window = self.root
-        self.lcam = Label(self.root)
-        self.lcam.pack()
+        self.lcam = Label(window, background=MONOBLACK)
+
         self.ldrone = Label(self.root)
 
         self.l_frame = Frame(window, background= MONOBLACK, width= 30, padx=5, height=40)
@@ -99,14 +100,17 @@ class GUI_mate_org():
 
         self.low_scale_frame = Frame(window, background= MONOBLACK, height= 100, pady= 5)
         self.low_scale_frame.pack(side='bottom', fill= X) 
-          
+        self.lcam.pack()
         print("Labels placed")
 
     def assign_variables(self):
         """Sets up all the necessary Variables for the Programm"""
         print("assigning Variables")
         root = self.root
+        self.cam_state = False
+
         self.drone_state = False
+        self.faceflag = False
 
         self.fly_flag = IntVar(root, 0)
         self.cont_var = IntVar(root, 0)
@@ -150,6 +154,31 @@ class GUI_mate_org():
         self.tello.connect()
         self.tello.streamon()
         self.drone_state = True
+
+    def dronestream(self):
+        """creates a window showing the Drone camera 
+        and turns on Facetracking if the flag has been set"""
+        try:
+            print("cam is on")
+            frame = self.tello.get_frame_read().frame
+            frame = cv2.resize(frame, (960, 720))
+            if self.faceflag == True:
+                gray_image = self.face.gray(frame)
+                detected_faces = self.face_cascade.detectMultiScale(gray_image, 1.1, 4)
+                print(detected_faces)
+                for (x, y, w, h) in detected_faces:
+                    cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0))
+                if len(detected_faces) != 0:
+                    self.face.controlling(self.tello, detected_faces, self.distance)
+                else:
+                    self.tello.send_rc_control(0, 0, 0, 0)
+        
+            cv2.imshow("stream", frame)
+        except:
+            print("drone cam not working")
+            if self.faceflag == True:
+                self.faceflag == False
+                self.cont_var.set(0)
 
     def creating_widgets(self):
         """Creating necessary Widgets, shouldnt be called individually"""
@@ -307,8 +336,6 @@ class GUI_mate_org():
             self.countdown = 0
         self.countdown += 1
 
-        
-
     def xbox(self, var):
         try:
             try:
@@ -353,28 +380,32 @@ class GUI_mate_org():
             self.spacemouse()
         
         elif self.controller == 3:
-            self.face_track()
+            if self.dronecam != 1:
+                self.dcam_var.set(1)
+            self.faceflag = True
         
+        elif self.controller != 3 and self.faceflag == True:
+            self.faceflag = False
         elif self.controller == 4:
             if self.facecam != 1:
                 self.fcam_var.set(1)
             self.gesture_flag = True
         
-        elif self.controller != 4:
+        elif self.controller != 4 and self.gesture_flag == True:
             self.gesture_flag = False
     
     def main_label(self):
         """Either sets up the camera or displayes the main logo"""
         if self.facecam == 1:
-            if cam_state == False:
+            if self.cam_state == False:
                 print('Init cap...')
-                cap = cv2.VideoCapture(0)
-                cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
-                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
+                self.cap = cv2.VideoCapture(0)
+                self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
+                self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
                 print('Cap initialized!') 
-                cam_state = True  
+                self.cam_state = True  
             else:         
-                img = self.hand.tk_handflight(self.tello, cap, self.throttle, self.gesture_flag)       #type: ignore
+                img = self.hand.tk_handflight(self.tello, self.cap, self.throttle, self.gesture_flag)       #type: ignore
                 self.cam(self.lcam, img)
         
         elif self.facecam == 0:
@@ -383,21 +414,30 @@ class GUI_mate_org():
     def main(self):
         print("starting loop")
         root = self.root
+        root.update()
         while True:
+            # print("Variabels")
             self.get_variables()
             if root.state() != 'normal':
+                print("closing windows")
                 self.total_annihilation(self.tello, root)
                 break
-
-            self.main_label
-
+            # print("label Check")
+            self.main_label()
+            # print("connect check")
             if self.connect_flag == 1:
                 if self.drone_state == False:
                     self.drone_connect()
-            
+            # print("drone check")
             if self.drone_state == True:
                 self.landing_widget()
                 self.drone_info()
+                self.dronestream()
+                self.controlls()
+            # print("update")
+            root.update()
+            sleep(1/144)
             
-            self.controlls()
- 
+if __name__ == "__main__":
+    mate = GUI_mate_org()
+    mate.main()

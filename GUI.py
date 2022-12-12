@@ -2,7 +2,6 @@ from time import sleep
 from tkinter import messagebox
 from PIL import Image,ImageTk
 from src.main import *
-import subprocess
 from src.spacenavigator import Space_call
 
 # myargs = [
