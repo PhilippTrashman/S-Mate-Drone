@@ -1,10 +1,10 @@
-# VW-DJI-tello (S_Mate Drohne)
+# **VW-DJI-tello (S_Mate Drohne)**
 ## A project about controlling the DJI Tello drone through a script. -->
 
 To start the script first install the requirements and run GUI.py
 
 ## Controll Methods include:
- - an Xbox Controller (Two controll settings)
+ - an Xbox Controller (GTA inspired controll and more Classic Drone controll methods)
  - 3D Spacemouse
  - Facetracking
  - Gesture Tracking
@@ -32,3 +32,7 @@ To install all the necessary modules just run the following code in your termina
  - PywinUSB
  - DJI Tello API
  - Spacenavigator API
+
+### **Regarding Controller Support**
+
+You can check if your controller is properly connected by running "available_devices.py" in Controller_Testing, your controller should show up as an Xbox 360 controller.
