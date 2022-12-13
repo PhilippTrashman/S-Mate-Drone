@@ -39,6 +39,7 @@ To install all the necessary modules just run the following code in your termina
 
 ### **Regarding Controller Support**
 
+<img src="Pictures\ControllerOverview.png" width = 30%>
+
 You can check if your controller is properly connected by running "available_devices.py" in Controller_Testing, your controller should show up as an Xbox 360 controller. 
  
-<img src="Pictures\ControllerOverview.png" width = 30%>
