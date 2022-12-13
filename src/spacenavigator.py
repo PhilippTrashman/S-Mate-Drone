@@ -414,7 +414,7 @@ class Space_call():
             _active_device.set_led(state)
 
 
-    def flight(self, tello: Tello, help):
+    def flight(self, tello: Tello, help, throttle):
         a = self.read()
 
         print(a)
@@ -432,5 +432,5 @@ class Space_call():
             help = 0
         elif a[7][0] == 1 and help != 0:
             tello.flip("r")
-        tello.send_rc_control(int(a[4]*100), int(a[5]*100), int(a[3]*100), int(a[6]*100))
+        tello.send_rc_control(int(a[4]*throttle), int(a[5]*throttle), int(a[3]*throttle), int(a[6]*throttle))
         return help
