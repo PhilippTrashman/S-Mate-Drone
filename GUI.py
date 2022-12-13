@@ -473,7 +473,7 @@ class GUI_mate_org():
             self.lcam.configure(image=self.mate)
 
     def main(self, framerate: int):
-        """Starting the Loop, """
+        """Starting the Loop, framerate can be adjusted, but puts more strain on the drone"""
         print("starting loop")
         root = self.root
         root.update()
