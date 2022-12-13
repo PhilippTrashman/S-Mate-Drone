@@ -1,5 +1,6 @@
 # **VW-DJI-tello (S_Mate Drohne)**
-## A project about controlling the DJI Tello drone through a script. -->
+## A project about controlling the DJI Tello drone through a script.
+<img src="Pictures\Logo.png" width = 25%>
 
 To start the script first install the requirements and run GUI.py
 
@@ -38,4 +39,6 @@ To install all the necessary modules just run the following code in your termina
 
 ### **Regarding Controller Support**
 
-You can check if your controller is properly connected by running "available_devices.py" in Controller_Testing, your controller should show up as an Xbox 360 controller.
+You can check if your controller is properly connected by running "available_devices.py" in Controller_Testing, your controller should show up as an Xbox 360 controller. 
+ 
+<img src="Pictures\ControllerOverview.png" width = 30%>
