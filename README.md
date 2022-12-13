@@ -12,6 +12,8 @@ You first need to connect the Drone by checking if you're connected to its WiFi 
 
 The Drone Camera can be turned on by clicking the corresponding Button
 
+The Throttle Slider can be used to adjust the Drones maximum speed, but going under 18 results in the drone not actually moving
+
 ### Blender:
 An additional feature is seeing the drone's rotation in Blender, you only need to set your Blender executable, a modell of the Drone is included in the Pictures folder and is set as the standard.
 
