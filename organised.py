@@ -1,4 +1,5 @@
 from tkinter import *  # type: ignore
+from tkinter import filedialog
 from src.main import *
 
 class GUI_mate_org():
@@ -10,10 +11,13 @@ class GUI_mate_org():
         self.space = Space_call()
         self.hand = HandDetection()
         self.face = FaceTracking()
-        self.face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+        self.face_cascade = cv2.CascadeClassifier("src/haarcascade_frontalface_default.xml")
+
+        self.blender = "none"
+        self.blendfile = "none"
 
         self.create_window()
-        self.mate = ImageTk.PhotoImage(Image.open("Pictures/Logo.png")) 
+        self.mate = ImageTk.PhotoImage(Image.open("Pictures/Logo.png"))     #type: ignore
         self.width, self.height = 1980, 1080
 
     def cam(self, label: Label, capture):    # Replaced by the new HandDetection class
@@ -30,14 +34,20 @@ class GUI_mate_org():
     def open_blender(self, button:Button):
         # Opens Blender
         myargs = [
-        "C:/Users/itlab/Desktop/blender-3.3.1-windows-x64/blender",     # File Path for the Blender Executable
-        "Pictures/Dji-Tello.blend"        # The File Path for the Blend file
+        self.blender,     # File Path for the Blender Executable
+        self.blendfile        # The File Path for the Blend file
         ]
-        try:
-            blend = subprocess.Popen(myargs, stdin=subprocess.PIPE, stdout= subprocess.PIPE, stderr= subprocess.PIPE)
-            button.configure(state='disabled')
-        except:
-            messagebox.showerror(title="Blender not Found", message="Check if you set the correct filepath for Blender\nChange it if necessary in the GUI.py file")
+        if self.blendfile == "none":
+            messagebox.showerror(title="No Blender File", message="You havent selected a Blender file to show")
+        elif self.blender == "none":
+            messagebox.showerror(title="No Blender Executable", message="You havent selected a Blender Executable")
+    
+        else:
+            try:
+                subprocess.Popen(myargs, stdin=subprocess.PIPE, stdout= subprocess.PIPE, stderr= subprocess.PIPE)
+                button.configure(state='disabled')
+            except:
+                messagebox.showerror(title="Blender not Found", message="Check if you set the correct filepath for Blender\nChange it if necessary in the GUI.py file")
 
     def total_annihilation(self, tello: Tello, root:Tk):
         """Just used for the Exit button to actually close all the windows""" 
@@ -56,9 +66,10 @@ class GUI_mate_org():
         print("creating window")
         self.root = Tk()
         self.root['background'] = MONOBLACK
+        self.root.wm_title("S_Mate Drohne")
 
-        icon = ImageTk.PhotoImage(Image.open("Pictures/Icon.png"))
-        self.root.iconphoto(False, icon)
+        icon = ImageTk.PhotoImage(Image.open("Pictures/Icon.png"))      #type: ignore
+        self.root.iconphoto(False, icon)        #type: ignore
         self.assign_variables()
         self.create_labels()
         self.creating_widgets()
@@ -112,6 +123,9 @@ class GUI_mate_org():
         self.drone_state = False
         self.faceflag = False
 
+        self.facestream_flag = False
+        self.dronestream_flag = False
+
         self.fly_flag = IntVar(root, 0)
         self.cont_var = IntVar(root, 0)
         self.fcam_var = IntVar(root, 0)
@@ -158,27 +172,60 @@ class GUI_mate_org():
     def dronestream(self):
         """creates a window showing the Drone camera 
         and turns on Facetracking if the flag has been set"""
-        try:
-            print("cam is on")
+        if self.dronecam == 1:
+            if self.faceflag == True:
+                # Checks if the Face Tracking window is opened
+                self.cont_var.set(0)
+                if cv2.getWindowProperty("Face Tracking", 0) >= 0:
+                    cv2.destroyWindow("Face Tracking")
+
             frame = self.tello.get_frame_read().frame
             frame = cv2.resize(frame, (960, 720))
-            if self.faceflag == True:
-                gray_image = self.face.gray(frame)
-                detected_faces = self.face_cascade.detectMultiScale(gray_image, 1.1, 4)
-                print(detected_faces)
-                for (x, y, w, h) in detected_faces:
-                    cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0))
-                if len(detected_faces) != 0:
-                    self.face.controlling(self.tello, detected_faces, self.distance)
-                else:
-                    self.tello.send_rc_control(0, 0, 0, 0)
+
+            cv2.imshow("Drone Stream", frame)
+
+    def facetracking(self):
+        if self.dronecam == 1:
+            try:
+                if cv2.getWindowProperty("Drone Stream", 0) >= 0:
+                    cv2.destroyWindow("Drone Stream")
+            except:
+                pass
+            self.dcam_var.set(0)
+        else:             
+            print("Facetracking is on")
+            frame = self.tello.get_frame_read().frame
+            frame = self.face.resize(frame, 960, 720)
+            gray_image = self.face.gray(frame)
+            detected_faces = self.face_cascade.detectMultiScale(gray_image, 1.1, 4)
+            print(detected_faces)
+            for (x, y, w, h) in detected_faces:
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0))
+            if len(detected_faces) != 0:
+                self.face.controlling(self.tello, detected_faces, self.distance)
+            else:
+                self.tello.send_rc_control(0, 0, 0, 0)
+            cv2.imshow("Face Tracking", frame)
+
+    def select_file(self):
+        print("Blend File selected")
+        self.blendfile = filedialog.askopenfilename(defaultextension = ".blend",filetypes = (("Blend Files", "*.blend"),("All Files", "*.*")))
         
-            cv2.imshow("stream", frame)
-        except:
-            print("drone cam not working")
-            if self.faceflag == True:
-                self.faceflag == False
-                self.cont_var.set(0)
+        if len(self.blendfile) and self.blendfile[-6:] != ".blend":
+            messagebox.showinfo(message = "Incompatible file format", title = "ERROR")
+
+        else:
+            print(self.blendfile)
+    def select_blender_exe(self):
+        print("Selectin Blender")
+        self.blender = filedialog.askopenfilename(defaultextension = ".exe",filetypes = (("Executable Files", "*.exe"),("All Files", "*.*")))
+
+        if len(self.blender) and self.blender[-4:] != ".exe":
+            messagebox.showinfo(message = "Incompatible file format", title = "ERROR")
+        
+        else:
+            print(self.blender)
+
 
     def creating_widgets(self):
         """Creating necessary Widgets, shouldnt be called individually"""
@@ -193,6 +240,9 @@ class GUI_mate_org():
 
         self.blender_btn = Button(root, text="View in\nBlender", background=SAGE, height= 2, width=15)
         self.blender_btn.config(command=lambda: self.open_blender(self.blender_btn))
+
+        self.select_blender = Button(root, text="Select Blender", command=lambda: self.select_blender_exe(), background=SAGE, height= 2, width=15)
+        self.select_blend = Button(root, text="Select File", command=lambda: self.select_file(), background=SAGE, height= 2, width=15)
 
         # Radiobuttons used to switch between controll modes, still not very pretty...
         self.xbox_btn = Radiobutton(root, text = "Xbox", variable = self.cont_var, value = 1, indicator = 0, background = SAGE, height=1, width= 15)   # type: ignore
@@ -260,6 +310,8 @@ class GUI_mate_org():
         self.btn_exit.pack(side='bottom', in_= self.r_btn_frame)
         # Button for opening Blender
         self.blender_btn.pack(side='top', anchor=W, in_= self.r_btn_frame)
+        self.select_blender.pack(side='top', anchor=W, in_= self.r_btn_frame)
+        self.select_blend.pack(side='top', anchor=W, in_= self.r_btn_frame)
 
         # Scales for Stats and Adjustments
         self.throt_sca.pack(anchor=CENTER,side="right", in_ = self.r_btn_frame)
@@ -271,7 +323,7 @@ class GUI_mate_org():
 
     def drone_rotation(self):
         """Writing drone rotation to a txt which gets read with Blender"""
-        print("getting drone rotation")
+        # print("getting drone rotation")
         pitch = self.tello.get_pitch()
         roll = self.tello.get_roll()
         yaw = self.tello.get_yaw()
@@ -321,7 +373,7 @@ class GUI_mate_org():
                 self.helper = 0
 
     def drone_info(self):
-        print("reading info")
+        # print("reading info")
 
         if self.countdown % 2 == 0:
             self.drone_rotation()
@@ -340,10 +392,12 @@ class GUI_mate_org():
         try:
             try:
                 if var == 1:
-                    self.helper, self.cam_direction, self.throttle = self.joy.flight_xbox(self.tello, self.helper, self.throttle, self.cam_direction)   
+                    self.throttle = self.joy.define_speed_xbox(self.throttle)
+                    self.helper, self.cam_direction = self.joy.flight_xbox(self.tello, self.helper, self.throttle, self.cam_direction)   
             
                 elif var == 5:
-                    self.helper, self.cam_direction, self.throttle = self.joy.flight_xbox_classic(self.tello, self.helper, self.throttle, self.cam_direction)   
+                    self.throttle = self.joy.define_speed_classic(self.throttle)
+                    self.helper, self.cam_directio = self.joy.flight_xbox_classic(self.tello, self.helper, self.throttle, self.cam_direction)   
             
             except:
                 self.cont_var.set(0)
@@ -359,7 +413,7 @@ class GUI_mate_org():
                 dev = self.space.open(callback=None, button_callback=self.space.toggle_led)
                 self.space_flag = True
             elif self.space_flag == True:
-                self.helper = self.space.flight(self.tello, self.helper)
+                self.helper = self.space.flight(self.tello, self.helper, self.throttle)
         except:
             self.cont_var.set(0)
             messagebox.showerror(title="Spacemouse Error", message="Couldnt Procced with controll Method \nCheck if your Spacemouse is properly connected")
@@ -373,6 +427,7 @@ class GUI_mate_org():
 
         if self.controller == 1:
             self.xbox(1)
+        
         elif self.controller == 5:
             self.xbox(5)
         
@@ -380,20 +435,21 @@ class GUI_mate_org():
             self.spacemouse()
         
         elif self.controller == 3:
-            if self.dronecam != 1:
-                self.dcam_var.set(1)
-            self.faceflag = True
-        
-        elif self.controller != 3 and self.faceflag == True:
-            self.faceflag = False
+            if self.faceflag == False:
+                self.faceflag = True
+            self.facetracking()
+
         elif self.controller == 4:
+            self.gesture_flag = True
             if self.facecam != 1:
                 self.fcam_var.set(1)
-            self.gesture_flag = True
-        
-        elif self.controller != 4 and self.gesture_flag == True:
+
+        if self.controller != 3 and self.faceflag == True:    
+            self.faceflag = False
+
+        if self.controller != 4 and self.gesture_flag == True:
             self.gesture_flag = False
-    
+        
     def main_label(self):
         """Either sets up the camera or displayes the main logo"""
         if self.facecam == 1:
@@ -404,14 +460,20 @@ class GUI_mate_org():
                 self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
                 print('Cap initialized!') 
                 self.cam_state = True  
-            else:         
-                img = self.hand.tk_handflight(self.tello, self.cap, self.throttle, self.gesture_flag)       #type: ignore
+            elif self.gesture_flag == False:         
+                img = self.hand.tk_handflight(self.tello, self.cap, self.throttle, False)       #type: ignore
+                self.cam(self.lcam, img)
+            
+            elif self.gesture_flag == True:
+                img = self.hand.tk_handflight(self.tello, self.cap, self.throttle, True)
+                print("controlls should work")
                 self.cam(self.lcam, img)
         
         elif self.facecam == 0:
             self.lcam.configure(image=self.mate)
 
-    def main(self):
+    def main(self, framerate: int):
+        """Starting the Loop, """
         print("starting loop")
         root = self.root
         root.update()
@@ -422,7 +484,6 @@ class GUI_mate_org():
                 print("closing windows")
                 self.total_annihilation(self.tello, root)
                 break
-            # print("label Check")
             self.main_label()
             # print("connect check")
             if self.connect_flag == 1:
@@ -436,8 +497,8 @@ class GUI_mate_org():
                 self.controlls()
             # print("update")
             root.update()
-            sleep(1/144)
+            sleep(1/framerate)
             
 if __name__ == "__main__":
     mate = GUI_mate_org()
-    mate.main()
+    mate.main(60)

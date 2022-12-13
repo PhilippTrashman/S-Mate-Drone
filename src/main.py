@@ -259,7 +259,7 @@ class XboxController(object):
 
         # send_rec_control configuration is left/right, back/forth, up/down, yaw
         tello.send_rc_control(int(cont.read()[3]*speed), int(cont.read()[2]*speed), int(cont.read()[1]*speed), int(cont.read()[0]*100))
-        return helper, cam_direction, speed
+        return helper, cam_direction
 
     def define_speed_xbox(self, current_speed) -> int:
         """For Xbox controll mode!, Returns a value to reduce or increase drone speed for controllers in increments of 5"""
@@ -626,6 +626,7 @@ class HandDetection():
             tello.send_rc_control(0, 0, 0, 0)
 
     def tk_handflight(self, tello: Tello, cam, throt: int, controll_flag: bool):
+        """Returns an Image with the Fingertracking overlay, turns on controlls if Controll_flag is true"""
         data, img = cam.read()
         img = cv2.cvtColor(cv2.flip(img,1),cv2.COLOR_BGR2RGB)
         img = self.tracking(img)
@@ -635,15 +636,18 @@ class HandDetection():
         return img
 
 class FaceTracking():
-    def resize(self, image):                #Smaller Picture
-        resized = cv2.resize(image, (600, 400), interpolation=cv2.INTER_LINEAR)
+    def resize(self, image, width, height):                #Smaller Picture
+        """Adjusts the video stream to a specified size and  returns the interpolated image"""
+        resized = cv2.resize(image, (width, height), interpolation=cv2.INTER_LINEAR)
         return resized
 
     def gray(self, image):
+        """Grays the imamge"""
         gray_frame = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         return gray_frame
 
     def controlling(self, tello, faces, distance):
+        """Sends controlls to the Drone"""
         width_middle = 300
         height_middle = 200
         face_reference = 80 - distance
@@ -677,7 +681,7 @@ class FaceTracking():
 
         while True:
             frame = tello.get_frame_read().frame
-            frame = self.resize(frame)
+            frame = self.resize(frame, 960, 720)
             gray_image = self.gray(frame)
             detected_faces = face_cascade.detectMultiScale(gray_image, 1.1, 4)
             print(detected_faces)
@@ -695,7 +699,7 @@ class FaceTracking():
     
     def tk_facetrack(self, tello: Tello, distance: int, cascade):
         frame = tello.get_frame_read().frame
-        frame = self.resize(frame)
+        frame = self.resize(frame, 960, 720)
         gray_image = self.gray(frame)
         detected_faces = cascade.detectMultiScale(gray_image, 1.1, 4)
         print(detected_faces)
