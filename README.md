@@ -16,6 +16,8 @@ The Drone Camera can be turned on by clicking the corresponding Button
 The Throttle Slider can be used to adjust the Drones maximum speed, but going under 18 results in the drone not actually moving
 
 ### Blender:
+**The Script currently isnt running automaticly, needs fixing**
+
 An additional feature is seeing the drone's rotation in Blender, you only need to set your Blender executable, a model of the Drone is included in the Pictures folder and is set as the standard.
 
 it works by writing the drone rotation to the drone_data.txt and the data then gets read by the Blender model

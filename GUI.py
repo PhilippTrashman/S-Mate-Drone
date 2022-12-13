@@ -35,17 +35,16 @@ class GUI_mate_org():
         # Opens Blender
         myargs = [
         self.blender,     # File Path for the Blender Executable
+        "-y",
         "Pictures/Dji-Tello.blend"        # The File Path for the Blend file
         ]
-        if self.blendfile == "none":
-            messagebox.showerror(title="No Blender File", message="You havent selected a Blender file to show")
-        elif self.blender == "none":
+        if self.blender == "none":
             messagebox.showerror(title="No Blender Executable", message="You havent selected a Blender Executable")
     
         else:
             try:
                 subprocess.Popen(myargs, stdin=subprocess.PIPE, stdout= subprocess.PIPE, stderr= subprocess.PIPE)
-                button.configure(state='disabled')
+                # button.configure(state='disabled')
             except:
                 messagebox.showerror(title="Blender not Found", message="Check if you set the correct filepath for Blender\nChange it if necessary in the GUI.py file")
 
@@ -207,15 +206,6 @@ class GUI_mate_org():
                 self.tello.send_rc_control(0, 0, 0, 0)
             cv2.imshow("Face Tracking", frame)
 
-    def select_file(self):
-        print("Blend File selected")
-        self.blendfile = filedialog.askopenfilename(defaultextension = ".blend",filetypes = (("Blend Files", "*.blend"),("All Files", "*.*")))
-        
-        if len(self.blendfile) and self.blendfile[-6:] != ".blend":
-            messagebox.showinfo(message = "Incompatible file format", title = "ERROR")
-
-        else:
-            print(self.blendfile)
     def select_blender_exe(self):
         print("Selectin Blender")
         self.blender = filedialog.askopenfilename(defaultextension = ".exe",filetypes = (("Executable Files", "*.exe"),("All Files", "*.*")))
@@ -328,7 +318,7 @@ class GUI_mate_org():
         roll = self.tello.get_roll()
         yaw = self.tello.get_yaw()
 
-        with open("drone_data.txt", "w") as txt:
+        with open("Pictures/drone_data.txt", "w") as txt:
             txt.write(f'{pitch},{roll},{yaw}')
 
     def get_drone_speed(self, tello:Tello,) -> int:
