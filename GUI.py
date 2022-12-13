@@ -25,7 +25,7 @@ class GUI_mate_org():
         lmain = label
         cap = capture
 
-        image = cv2.cvtColor(cv2.flip(cap,1),cv2.COLOR_BGR2RGB)
+        image = cv2.cvtColor(cap,cv2.COLOR_BGR2RGB)
         img = Image.fromarray(image)   # type: ignore
         imgtk = ImageTk.PhotoImage(image=img)
         lmain.imgtk = imgtk # type: ignore
