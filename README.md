@@ -3,6 +3,7 @@
 
 To start the script first install the requirements and run GUI.py
 
+You first need to connect the Drone by checking if you're connected to its WiFi connection and clicking the "On" button in the Upper left corner
 ## Controll Methods include:
  - an Xbox Controller (GTA inspired controll and more Classic Drone controll methods)
  - 3D Spacemouse
