@@ -172,16 +172,20 @@ class GUI_mate_org():
         self.drone_state = True
         
         # activating the Buttons after the Drone has been connected
-        self.xbox_btn.configure(state='enabled')
-        self.xbox_classic.configure(state='enabled')
-        self.space_btn.configure(state='enabled')
-        self.face_btn.configure(state='enabled')
-        self.lift_off.configure(state='enabled')
-        self.lift_on.configure(state='enabled')
-        self.streamoff_btn.configure(state='enabled')
-        self.streamon_btn.configure(state='enabled')
-        self.throt_sca.configure(state='enabled')
-        self.face_distance_sca.configure(state='enabled')
+        self.xbox_btn.configure(state='active')
+        self.xbox_classic.configure(state='active')
+        self.space_btn.configure(state='active')
+        self.face_btn.configure(state='active')
+        self.gest_btn.configure(state='active')
+
+        self.lift_off.configure(state='active')
+        self.lift_on.configure(state='active')
+
+        self.streamoff_btn.configure(state='active')
+        self.streamon_btn.configure(state='active')
+        
+        self.throt_sca.configure(state='active')
+        self.face_distance_sca.configure(state='active')
 
 
     def dronestream(self):
