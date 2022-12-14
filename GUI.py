@@ -167,25 +167,29 @@ class GUI_mate_org():
 
     def drone_connect(self):
         """Connects to the drone and sets the connected Flag to True"""
-        self.tello.connect()
-        self.tello.streamon()
-        self.drone_state = True
+        try:
+            self.tello.connect()
+            self.tello.streamon()
+            self.drone_state = True
         
-        # activating the Buttons after the Drone has been connected
-        self.xbox_btn.configure(state='active')
-        self.xbox_classic.configure(state='active')
-        self.space_btn.configure(state='active')
-        self.face_btn.configure(state='active')
-        self.gest_btn.configure(state='active')
+            # activating the Buttons after the Drone has been connected
+            self.xbox_btn.configure(state='active')
+            self.xbox_classic.configure(state='active')
+            self.space_btn.configure(state='active')
+            self.face_btn.configure(state='active')
+            self.gest_btn.configure(state='active')
 
-        self.lift_off.configure(state='active')
-        self.lift_on.configure(state='active')
+            self.lift_off.configure(state='active')
+            self.lift_on.configure(state='active')
 
-        self.streamoff_btn.configure(state='active')
-        self.streamon_btn.configure(state='active')
-        
-        self.throt_sca.configure(state='active')
-        self.face_distance_sca.configure(state='active')
+            self.streamoff_btn.configure(state='active')
+            self.streamon_btn.configure(state='active')
+
+            self.throt_sca.configure(state='active')
+            self.face_distance_sca.configure(state='active')
+        except:
+            self.drone_var.set(0)
+            messagebox.showerror(title="Drone Error", message="Couldnt Connect to the Drone, check if you're connected or restart the Drone")
 
 
     def dronestream(self):
