@@ -3,6 +3,8 @@ from tkinter import filedialog
 from src.main import *
 
 class GUI_mate_org():
+    """The Second Build of the Script, creates an UI and sets the controll methods of the Drone.
+    To execute it, call "main(fps) and run the script"""
 
     def __init__(self):
         print("initialising UI")
@@ -32,6 +34,7 @@ class GUI_mate_org():
         lmain.configure(image=imgtk)
 
     def open_blender(self, button:Button):
+        """Opens Blender and the Model of the Drone"""
         # Opens Blender
         myargs = [
         self.blender,     # File Path for the Blender Executable
@@ -184,6 +187,7 @@ class GUI_mate_org():
             cv2.imshow("Drone Stream", frame)
 
     def facetracking(self):
+        """Turns Facetracking on, also closes the "Drone Stream" window if its opened"""
         if self.dronecam == 1:
             try:
                 if cv2.getWindowProperty("Drone Stream", 0) >= 0:
@@ -207,6 +211,7 @@ class GUI_mate_org():
             cv2.imshow("Face Tracking", frame)
 
     def select_blender_exe(self):
+        """used to specify the Blender executable"""
         print("Selectin Blender")
         self.blender = filedialog.askopenfilename(defaultextension = ".exe",filetypes = (("Executable Files", "*.exe"),("All Files", "*.*")))
 
@@ -215,7 +220,6 @@ class GUI_mate_org():
         
         else:
             print(self.blender)
-
 
     def creating_widgets(self):
         """Creating necessary Widgets, shouldnt be called individually"""
@@ -363,6 +367,7 @@ class GUI_mate_org():
                 self.helper = 0
 
     def drone_info(self):
+        """Reads out the Drones Information"""
         # print("reading info")
 
         if self.countdown % 2 == 0:
@@ -379,6 +384,7 @@ class GUI_mate_org():
         self.countdown += 1
 
     def xbox(self, var):
+        """Xbox controlls for the Drone"""
         try:
             try:
                 if var == 1:
@@ -398,6 +404,7 @@ class GUI_mate_org():
             messagebox.showerror(title="Controller Error", message="Couldnt Procced with controll Method \nCheck if your Xbox Controller is properly connected")  
 
     def spacemouse(self):
+        """3D Spacemouse controlls for the Drone"""
         try:
             if self.space_flag == False:
                 dev = self.space.open(callback=None, button_callback=self.space.toggle_led)
@@ -408,11 +415,8 @@ class GUI_mate_org():
             self.cont_var.set(0)
             messagebox.showerror(title="Spacemouse Error", message="Couldnt Procced with controll Method \nCheck if your Spacemouse is properly connected")
 
-    def face_track(self):
-        self.face.tk_facetrack(self.tello, self.distance, self.face_cascade) 
-        cv2.destroyWindow("stream")
-
     def controlls(self):
+        """Switches between different controll methods"""
         self.throt_var.set(self.throttle)
 
         if self.controller == 1:
