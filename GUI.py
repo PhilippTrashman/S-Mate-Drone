@@ -170,6 +170,19 @@ class GUI_mate_org():
         self.tello.connect()
         self.tello.streamon()
         self.drone_state = True
+        
+        # activating the Buttons after the Drone has been connected
+        self.xbox_btn.configure(state='enabled')
+        self.xbox_classic.configure(state='enabled')
+        self.space_btn.configure(state='enabled')
+        self.face_btn.configure(state='enabled')
+        self.lift_off.configure(state='enabled')
+        self.lift_on.configure(state='enabled')
+        self.streamoff_btn.configure(state='enabled')
+        self.streamon_btn.configure(state='enabled')
+        self.throt_sca.configure(state='enabled')
+        self.face_distance_sca.configure(state='enabled')
+
 
     def dronestream(self):
         """creates a window showing the Drone camera 
@@ -239,33 +252,33 @@ class GUI_mate_org():
         # self.select_blend = Button(root, text="Select File", command=lambda: self.select_file(), background=SAGE, height= 2, width=15)
 
         # Radiobuttons used to switch between controll modes, still not very pretty...
-        self.xbox_btn = Radiobutton(root, text = "Xbox", variable = self.cont_var, value = 1, indicator = 0, background = SAGE, height=1, width= 15)   # type: ignore
-        self.xbox_classic = Radiobutton(root, text = "Classic", variable = self.cont_var, value = 5, indicator = 0, background = SAGE, height=1, width= 15)   # type: ignore
-        self.space_btn = Radiobutton(root, text= "Space Mouse", variable= self.cont_var, value= 2, indicator = 0, background = SAGE, height=1, width= 15)   # type: ignore
-        self.face_btn = Radiobutton(root, text= "Face Tracking", variable= self.cont_var, value = 3, indicator = 0, background = SAGE, height=1, width= 15)   # type: ignore
-        self.gest_btn = Radiobutton(root, text= "Gesture Tracking", variable= self.cont_var, value = 4, indicator = 0, background = SAGE, height=1, width= 15)   # type: ignore
+        self.xbox_btn = Radiobutton(root, text = "Xbox", variable = self.cont_var, value = 1, indicator = 0, background = SAGE, height=1, width= 15, state='disabled')   # type: ignore
+        self.xbox_classic = Radiobutton(root, text = "Classic", variable = self.cont_var, value = 5, indicator = 0, background = SAGE, height=1, width= 15, state='disabled')   # type: ignore
+        self.space_btn = Radiobutton(root, text= "Space Mouse", variable= self.cont_var, value= 2, indicator = 0, background = SAGE, height=1, width= 15, state='disabled')   # type: ignore
+        self.face_btn = Radiobutton(root, text= "Face Tracking", variable= self.cont_var, value = 3, indicator = 0, background = SAGE, height=1, width= 15, state='disabled')   # type: ignore
+        self.gest_btn = Radiobutton(root, text= "Gesture Tracking", variable= self.cont_var, value = 4, indicator = 0, background = SAGE, height=1, width= 15, state='disabled')   # type: ignore
 
         # Button to lift the Drone
-        self.lift_off = Radiobutton(root, text= "Lift \noff", variable= self.fly_flag, value= 1, indicator = 0, background = SAGE, height=2, width= 7)   # type: ignore
-        self.lift_on =  Radiobutton(root, text= "Land", variable= self.fly_flag, value= 0, indicator = 0, background = SAGE, height=2, width= 7)   # type: ignore
+        self.lift_off = Radiobutton(root, text= "Lift \noff", variable= self.fly_flag, value= 1, indicator = 0, background = SAGE, height=2, width= 7, state='disabled')   # type: ignore
+        self.lift_on =  Radiobutton(root, text= "Land", variable= self.fly_flag, value= 0, indicator = 0, background = SAGE, height=2, width= 7, state='disabled')   # type: ignore
 
         # Turns the Facecam on
         self.camon_btn = Radiobutton(root, text = "On", variable = self.fcam_var, value = 1, indicator = 0, background = SAGE, height=1, width= 7)         #type: ignore
         self.camoff_btn = Radiobutton(root, text = "Off", variable = self.fcam_var, value = 0, indicator = 0, background = SAGE, height=1, width= 7)       #type: ignore
 
         #Turning the Drone Camera on
-        self.streamon_btn = Radiobutton(root, text = "On", variable = self.dcam_var, value = "1", indicator = 0, background = SAGE, height=1, width= 7)         #type: ignore
-        self.streamoff_btn = Radiobutton(root, text = "Off", variable = self.dcam_var, value = "0", indicator = 0, background = SAGE, height=1, width= 7)       #type: ignore
+        self.streamon_btn = Radiobutton(root, text = "On", variable = self.dcam_var, value = "1", indicator = 0, background = SAGE, height=1, width= 7, state='disabled')         #type: ignore
+        self.streamoff_btn = Radiobutton(root, text = "Off", variable = self.dcam_var, value = "0", indicator = 0, background = SAGE, height=1, width= 7, state='disabled')       #type: ignore
         # Different Buttons that are still unfinished
         self.btn_exit = Button(root, text="Exit", width=10, height=2, background= RED, command = lambda: self.total_annihilation(self.tello, root))       
         self.btn_con = Radiobutton(root, text = "On", variable = self.drone_var, value = 1, indicator = 0, background = SAGE, height=2, width= 15)       #type: ignore
         
         # Different Scales used to visualize Drone speed and Throttle controll
-        self.throt_sca = Scale(root,activebackground=NUDE ,troughcolor=SAGE ,from_=100, to = 1, sliderlength = 50, length= 400, width= 25, variable = self.throt_var, bg= MONOBLACK, foreground=WHITE, highlightbackground= SAGE, label="Throttle")
+        self.throt_sca = Scale(root,activebackground=NUDE ,troughcolor=SAGE ,from_=100, to = 1, sliderlength = 50, length= 400, width= 25, variable = self.throt_var, bg= MONOBLACK, foreground=WHITE, highlightbackground= SAGE, label="Throttle", state='disabled')
 
         self.speed_sca = Scale(root ,troughcolor=SAGE, from_=0, to = 20, sliderlength = 25, length= 300, width= 25,variable= self.speed_var ,orient='horizontal', bg= MONOBLACK, foreground=WHITE, highlightbackground= SAGE, state='disabled', label="Speed")
         
-        self.face_distance_sca = Scale(root, troughcolor=SAGE, from_=10, to = 70, sliderlength = 35, length= 185, width= 25,variable= self.face_distance_var, orient='horizontal' , bg= MONOBLACK, foreground=WHITE, highlightbackground= SAGE, label='Tracking Distance')
+        self.face_distance_sca = Scale(root, troughcolor=SAGE, from_=10, to = 70, sliderlength = 35, length= 185, width= 25,variable= self.face_distance_var, orient='horizontal' , bg= MONOBLACK, foreground=WHITE, highlightbackground= SAGE, label='Tracking Distance', state='disabled')
         print("Widgets created")
 
     def placing_widgets(self):
@@ -474,7 +487,7 @@ class GUI_mate_org():
         while True:
             # print("Variabels")
             self.get_variables()
-            if root.state() != 'normal':
+            if root.state() != 'normal' and root.state() != 'zoomed' and root.state() != 'withdrawn' and root.state() != 'iconic':
                 print("closing windows")
                 self.total_annihilation(self.tello, root)
                 break
