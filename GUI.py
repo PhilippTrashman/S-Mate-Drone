@@ -1,6 +1,9 @@
 from tkinter import *  # type: ignore
 from tkinter import filedialog
 from src.main import *
+import pygame
+from BlumiBird.player import Player
+from BlumiBird.game import Game
 
 class GUI_mate_org():
     """The Second Build of the Script, creates an UI and sets the controll methods of the Drone.
@@ -14,6 +17,8 @@ class GUI_mate_org():
         self.hand = HandDetection()
         self.face = FaceTracking()
         self.face_cascade = cv2.CascadeClassifier("src/haarcascade_frontalface_default.xml")
+
+        self.gamer = Game()
 
         self.blender = "none"
 
@@ -32,6 +37,25 @@ class GUI_mate_org():
         imgtk = ImageTk.PhotoImage(image=img)
         lmain.imgtk = imgtk # type: ignore
         lmain.configure(image=imgtk)
+
+    def blumi_setter(self):
+        self.gameplay = True
+    
+    def blumibird_game(self):
+
+        if self.game_init == False:
+            print("Gamermode activated")
+            self.gamer.init_game()
+            self.game_init = True
+        
+        elif self.gamer.run == True:
+            self.gamer.game_loop()
+        
+        elif self.gamer.run != True and self.game_init == True:
+            pygame.quit()
+            self.game_init = False
+            self.gameplay = False
+
 
     def open_blender(self, button:Button):
         """Opens Blender and the Model of the Drone"""
@@ -71,6 +95,10 @@ class GUI_mate_org():
         self.root.wm_title("S_Mate Drohne")
 
         icon = ImageTk.PhotoImage(Image.open("Pictures/Icon.png"))      #type: ignore
+        blume = Image.open("BlumiBird/assets/sprite_0.png")
+        blume = blume.resize((25, 25), Image.ANTIALIAS)
+        self.blume = ImageTk.PhotoImage(blume)
+        
         self.root.iconphoto(False, icon)        #type: ignore
         self.assign_variables()
         self.create_labels()
@@ -114,6 +142,7 @@ class GUI_mate_org():
         self.low_scale_frame = Frame(window, background= MONOBLACK, height= 100, pady= 5)
         self.low_scale_frame.pack(side='bottom', fill= X) 
         self.lcam.pack()
+
         print("Labels placed")
 
     def assign_variables(self):
@@ -152,6 +181,10 @@ class GUI_mate_org():
         self.helper = 0             # additional helper to check if the drone is flying
         self.countdown = 0          # Countdown to reduce drone load
         self.time_minutes = 0       # Variable to count flight minutes
+
+
+        self.game_init = False
+        self.gameplay = False
         print("variables assigned")
 
     def get_variables(self):
@@ -259,6 +292,8 @@ class GUI_mate_org():
         self.select_blender = Button(root, text="Select Blender", command=lambda: self.select_blender_exe(), background=SAGE, height= 2, width=15)
         # self.select_blend = Button(root, text="Select File", command=lambda: self.select_file(), background=SAGE, height= 2, width=15)
 
+        self.blumi_but = Button(root, image=self.blume, background=SAGE, pady=5, padx=5, command=lambda: self.blumi_setter())
+
         # Radiobuttons used to switch between controll modes, still not very pretty...
         self.xbox_btn = Radiobutton(root, text = "Xbox", variable = self.cont_var, value = 1, indicator = 0, background = SAGE, height=1, width= 15, state='disabled')   # type: ignore
         self.xbox_classic = Radiobutton(root, text = "Classic", variable = self.cont_var, value = 5, indicator = 0, background = SAGE, height=1, width= 15, state='disabled')   # type: ignore
@@ -332,6 +367,8 @@ class GUI_mate_org():
         self.throt_sca.pack(anchor=CENTER,side="right", in_ = self.r_btn_frame)
 
         self.speed_sca.pack(side='bottom', anchor=CENTER, in_= self.low_scale_frame)
+
+        self.blumi_but.pack(side= 'top', in_= self.l_frame)
 
         self.face_distance_sca.pack(side='bottom', in_= self.l_frame)
         print("Widgets placed")
@@ -493,6 +530,8 @@ class GUI_mate_org():
         root = self.root
         root.update()
         while True:
+            if self.gameplay == True:
+                self.blumibird_game()
             # print("Variabels")
             self.get_variables()
             if root.state() != 'normal' and root.state() != 'zoomed' and root.state() != 'withdrawn' and root.state() != 'iconic':
