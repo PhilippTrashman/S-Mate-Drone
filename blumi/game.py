@@ -1,6 +1,6 @@
 import pygame
 import random
-from BlumiBird.player import Player, Pipes
+from blumi.player import Player, Pipes
 from time import sleep
 import json
 
