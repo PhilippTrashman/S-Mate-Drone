@@ -2,8 +2,8 @@ from tkinter import *  # type: ignore
 from tkinter import filedialog
 from src.main import *
 import pygame
-from BlumiBird.player import Player
-from BlumiBird.game import Game
+from blumi.player import Player
+from blumi.game import Game
 
 class GUI_mate_org():
     """The Second Build of the Script, creates an UI and sets the controll methods of the Drone.
