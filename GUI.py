@@ -52,7 +52,7 @@ class GUI_mate_org():
             self.gamer.game_loop()
         
         elif self.gamer.run != True and self.game_init == True:
-            pygame.quit()
+            self.gamer.close_game()
             self.game_init = False
             self.gameplay = False
 
