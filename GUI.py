@@ -1,6 +1,7 @@
 from tkinter import *  # type: ignore
 from tkinter import filedialog
 from src.main import *
+import multiprocessing
 import pygame
 from blumi.player import Player
 from blumi.game import Game
@@ -9,7 +10,7 @@ class GUI_mate_org():
     """The Second Build of the Script, creates an UI and sets the controll methods of the Drone.
     To execute it, call "main(fps) and run the script"""
 
-    def __init__(self):
+    def init__(self, queue):
         print("initialising UI")
         self.tello = Tello()
         self.joy = XboxController()
@@ -19,9 +20,9 @@ class GUI_mate_org():
         self.face_cascade = cv2.CascadeClassifier("src/haarcascade_frontalface_default.xml")
 
         self.gamer = Game()
+        self.queue = queue
 
         self.blender = "none"
-
 
         self.create_window()
         self.mate = ImageTk.PhotoImage(Image.open("Pictures/Logo.png"))     #type: ignore
@@ -41,8 +42,7 @@ class GUI_mate_org():
     def blumi_setter(self):
         self.gameplay = True
     
-    def blumibird_game(self):
-
+    def blumi_game(self):
         if self.game_init == False:
             print("Gamermode activated")
             self.gamer.init_game()
@@ -53,8 +53,18 @@ class GUI_mate_org():
         
         elif self.gamer.run != True and self.game_init == True:
             self.gamer.close_game()
+            self.root.event_generate("<<PygameQuit>>", when="tail")
             self.game_init = False
             self.gameplay = False
+
+    def blumi_start(self, queue):
+        print("game thread started")
+        message = queue.get()
+        if message == "start_game":
+            self.gamer = Game()
+            self.blumi_setter()
+            # self.queue.set("game_stopped")
+            self.gamer.main()
 
 
     def open_blender(self, button:Button):
@@ -95,7 +105,7 @@ class GUI_mate_org():
         self.root.wm_title("S_Mate Drohne")
 
         icon = ImageTk.PhotoImage(Image.open("Pictures/Icon.png"))      #type: ignore
-        blume = Image.open("BlumiBird/assets/sprite_0.png")
+        blume = Image.open("blumi/assets/sprite_0.png")
         blume = blume.resize((25, 25), Image.ANTIALIAS)
         self.blume = ImageTk.PhotoImage(blume)
         
@@ -292,7 +302,7 @@ class GUI_mate_org():
         self.select_blender = Button(root, text="Select Blender", command=lambda: self.select_blender_exe(), background=SAGE, height= 2, width=15)
         # self.select_blend = Button(root, text="Select File", command=lambda: self.select_file(), background=SAGE, height= 2, width=15)
 
-        self.blumi_but = Button(root, image=self.blume, background=SAGE, pady=5, padx=5, command=lambda: self.blumi_setter())
+        self.blumi_but = Button(root, image=self.blume, background=SAGE, pady=5, padx=5, command=lambda: self.queue.put("start_game"))
 
         # Radiobuttons used to switch between controll modes, still not very pretty...
         self.xbox_btn = Radiobutton(root, text = "Xbox", variable = self.cont_var, value = 1, indicator = 0, background = SAGE, height=1, width= 15, state='disabled')   # type: ignore
@@ -524,15 +534,13 @@ class GUI_mate_org():
         elif self.facecam == 0:
             self.lcam.configure(image=self.mate)
 
-    def main(self, framerate: int):
-        """Starting the Loop, framerate can be adjusted, but puts more strain on the drone"""
+    def main(self, queue):
+        """Starting the Loop, framerate can be adjusted, higher fps = more strain on the drone, queue must be assigned so the minigame works better"""
         print("starting loop")
+        self.init__(queue)
         root = self.root
         root.update()
         while True:
-            if self.gameplay == True:
-                self.blumibird_game()
-            # print("Variabels")
             self.get_variables()
             if root.state() != 'normal' and root.state() != 'zoomed' and root.state() != 'withdrawn' and root.state() != 'iconic':
                 print("closing windows")
@@ -551,8 +559,17 @@ class GUI_mate_org():
                 self.controlls()
             # print("update")
             root.update()
-            sleep(1/framerate)
+            sleep(1/60)
+
             
 if __name__ == "__main__":
     mate = GUI_mate_org()
-    mate.main(60)
+    queue = multiprocessing.Queue()
+    tkinter = multiprocessing.Process(target=mate.main, args=(queue,))
+    tkinter.start()
+
+    game = multiprocessing.Process(target=mate.blumi_start, args=(queue,))
+    game.start()
+
+    tkinter.join()
+    game.join()

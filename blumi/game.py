@@ -10,7 +10,8 @@ VWGRAY = '#A8A8A8'
 VWWHITE = '#FDFAF9'
 
 class Game:
-    def __init__(self, bg = "BlumiBird/assets/background.jpg", ground = "BlumiBird/assets/ground.png"):
+    """BlumiBird THE GAME, either use main() to execute the game"""
+    def __init__(self, bg = "blumi/assets/background.jpg", ground = "blumi/assets/ground.png"):
         """Initialises and sets necessary values"""
         self.screen_width = 720
         self.screen_height = 1280
@@ -30,6 +31,8 @@ class Game:
         self.chimney_gr()
 
         pygame.font.init()
+        pygame_icon = pygame.image.load('blumi/assets/sprite_0.png')
+        pygame.display.set_icon(pygame_icon)
         self.font = pygame.font.SysFont('Comic Sans MS', 40)
 
         self.score = -1
@@ -38,8 +41,6 @@ class Game:
     def load_data(self):
         self.loadedbg = pygame.image.load(self.bg)
         self.loadedground = pygame.image.load(self.ground)
-        pygame_icon = pygame.image.load('Pictures\Icon.png')
-        pygame.display.set_icon(pygame_icon)
     
     def bird_gr(self):
         """Creates the bird"""
@@ -211,7 +212,7 @@ class Game:
         else: 
             pygame.draw.rect(self.screen,VWDARK,[self.screen_width/2-100,self.screen_height/2,200,40])
 
-        with open('BlumiBird/highscore.json', 'r') as self.file:
+        with open('blumi/highscore.json', 'r') as self.file:
             self.high = self.file.read()
 
         self.text_highscore = self.smallfont.render('Highscore: ' + self.high , True , VWWHITE)
@@ -248,7 +249,7 @@ class Game:
     def highscore(self):
         #read current highscore
         try:
-            with open('BlumiBird/highscore.json', 'r') as self.highscore_file:
+            with open('blumi/highscore.json', 'r') as self.highscore_file:
                 self.data = self.highscore_file.read()
 
             self.current_highscore = json.loads(self.data)
@@ -258,7 +259,7 @@ class Game:
             self.current_highscore = 0
 
         if self.score >= self.current_highscore:
-                with open('BlumiBird/highscore.json', 'w') as self.highscore_file:
+                with open('blumi/highscore.json', 'w') as self.highscore_file:
                     self.highscore_file.write(str(self.score))
         
         
@@ -291,7 +292,7 @@ class Game:
         self.timer = 0
         self.restart_flag = False
 
-        pygame.mixer.music.load("BlumiBird/assets/funky town low quality.mp3")
+        pygame.mixer.music.load("blumi/assets/funky town low quality.mp3")
         #https://www.youtube.com/watch?v=poa_QBvtIBA if you want the song ;)
         pygame.mixer.music.play(loops = -1)
         pygame.mixer.music.set_volume(0.05)
@@ -315,10 +316,11 @@ class Game:
                 
         pygame.display.update()
         # self.timer += 1
-        # pygame.time.Clock().tick(60)
+        pygame.time.Clock().tick(60)
 
     def close_game(self):
-        pygame.quit
+        pygame.display.quit()
+        pygame.mixer.quit()
 
 
 if __name__ == "__main__":

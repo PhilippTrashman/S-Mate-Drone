@@ -15,7 +15,7 @@ class Player(pygame.sprite.Sprite):
         if self.flap_flag == True:
             self.image = self.flap_anim[self.frame]
         else:    
-            self.image = pygame.image.load("BlumiBird/assets/sprite_0.png")
+            self.image = pygame.image.load("blumi/assets/sprite_0.png")
 
         self.rect = self.image.get_rect()
         self.rect.center = [x,y]
@@ -54,7 +54,7 @@ class Player(pygame.sprite.Sprite):
                 self.rect.center = self.center
 
         else:    
-            self.image = pygame.image.load("BlumiBird/assets/sprite_0.png")
+            self.image = pygame.image.load("blumi/assets/sprite_0.png")
         # print(self.flap_flag)
 
         #Jumping
@@ -75,9 +75,9 @@ class Player(pygame.sprite.Sprite):
     def get_flap(self):
         """Sets up the Flying Animation Frames"""
         print("setting anim")
-        sprite_0 = pygame.image.load("BlumiBird/assets/sprite_0.png")
-        sprite_1 = pygame.image.load("BlumiBird/assets/sprite_1.png")
-        sprite_2 = pygame.image.load("BlumiBird/assets/sprite_2.png")
+        sprite_0 = pygame.image.load("blumi/assets/sprite_0.png")
+        sprite_1 = pygame.image.load("blumi/assets/sprite_1.png")
+        sprite_2 = pygame.image.load("blumi/assets/sprite_2.png")
         self.flap_anim = [sprite_0,
                           sprite_1,
                           sprite_2]
@@ -86,7 +86,7 @@ class Player(pygame.sprite.Sprite):
 class Pipes(pygame.sprite.Sprite):
     def __init__(self, x, y, position):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('BlumiBird/assets/Chimney.png')
+        self.image = pygame.image.load('blumi/assets/Chimney.png')
         # self.image = pygame.transform.scale(self.image,)
         self.rect = self.image.get_rect()
         if position == -1:
