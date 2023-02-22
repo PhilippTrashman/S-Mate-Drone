@@ -10,6 +10,8 @@ class Player(pygame.sprite.Sprite):
         self.anim_rate = 100
         self.flap_flag = False
         self.frame = 0
+        self.character = "blumi"
+
         self.get_flap()
 
         if self.flap_flag == True:
@@ -81,6 +83,23 @@ class Player(pygame.sprite.Sprite):
         self.flap_anim = [sprite_0,
                           sprite_1,
                           sprite_2]
+        
+    def get_adv_flap(self, char :str):
+        """used to change the character skin"""
+        self.char_lib = {
+            "blumi": 2,
+            "amogus": 4
+        }
+
+        print(f'setting anim for {self.character}')
+        self.flap_anim = []
+
+        for i in range(self.char_lib[char]):  
+            self.flap_anim.append(pygame.image.load(f'blumi/assets/{char}/sprite_{i}.png'))
+        
+        print(f'the character')
+
+
 
 
 class Pipes(pygame.sprite.Sprite):
