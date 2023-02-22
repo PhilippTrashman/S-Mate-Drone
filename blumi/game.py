@@ -154,6 +154,8 @@ class Game:
         self.screen_height-self.loadedground.get_height()+70))
 
         self.mouse = pygame.mouse.get_pos()
+        menutext = self.bigfont.render('BlumiBird', True , VWWHITE)
+        self.screen.blit(menutext, (self.screen_width/2-200, self.screen_height/2-300))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -262,8 +264,7 @@ class Game:
                 with open('blumi/highscore.json', 'w') as self.highscore_file:
                     self.highscore_file.write(str(self.score))
         
-        
-
+    
 
     def main(self):
         """Main Function"""
@@ -285,6 +286,8 @@ class Game:
         pygame.display.set_caption('BlumiBird')
 
         self.smallfont = pygame.font.SysFont('Corbel',35)
+        self.bigfont = pygame.font.SysFont('Corbel_Bold', 120)
+
         self.text_start = self.smallfont.render('Start' , True , VWWHITE)
         self.text_exit = self.smallfont.render('Exit', True, VWWHITE)
         self.text_restart = self.smallfont.render('Restart', True, VWWHITE)
